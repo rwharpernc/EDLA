@@ -1,0 +1,6 @@
+PyQt6>=6.6.0
+watchdog>=3.0.0
+
+# Optional development dependencies (for building executables)
+# pyinstaller>=6.0.0
+
