@@ -2,11 +2,14 @@
 
 **Author:** R.W. Harper  
 **Last Updated:** 2025-12-09  
-**License:** GPL-3.0
+**License:** GPL-3.0  
+**Version:** Alpha 1.0 (Unreleased - Early Prototype)
 
-> **Note:** EDLA is a temporary project name and may change in the project evolves.
+> **⚠️ WARNING: This is an early prototype and is NOT for public use or testing. The project is in active development and many features are incomplete or not yet implemented.**
 
-A Python GUI application for monitoring and analyzing Elite Dangerous journal files in real-time. Supports multiple commander profiles with event tracking and statistics.
+> **Note:** EDLA is a temporary project name and may change as the project evolves.
+
+A Python GUI application (early prototype) for monitoring and analyzing Elite Dangerous log files in real-time. Currently supports basic commander profile management and event tracking. Many planned features are not yet implemented.
 
 ## Table of Contents
 
@@ -20,18 +23,26 @@ A Python GUI application for monitoring and analyzing Elite Dangerous journal fi
 - [Contributing](#contributing)
 - [License](#license)
 
-## Features
+## Current Status
 
-- **Modern Dark-Themed UI** - Built with PyQt6 for a native Windows experience
-- **Real-Time Monitoring** - Automatically watches Elite Dangerous journal files for new events
-- **Multi-Commander Support** - Track multiple commanders with individual profiles
-- **Auto-Detection** - Automatically detects commanders from journal files
-- **Event Tracking** - Captures and displays all game events in real-time
-- **Statistics** - Tracks event counts, last ship, last system, and more per commander
-- **Profile Management** - Easy-to-use interface for managing commander profiles
-- **Active Navigation Indicators** - Visual feedback showing which screen is active
-- **Help System** - Built-in About and License dialogs
-- **Application Logging** - Debug logging to help troubleshoot issues
+**⚠️ Early Prototype - Not for Public Use**
+
+This is a very early prototype with basic functionality. The application currently provides:
+- Basic UI framework with dark theme
+- Commander detection from journal files
+- Simple event display
+- Basic profile management
+
+**Many planned features are not yet implemented.** See [TODO.md](TODO.md) for planned functionality.
+
+## Current Features (Alpha 1.0)
+
+- **Basic UI Framework** - PyQt6-based dark-themed interface
+- **Commander Detection** - Automatically scans journal files for commanders
+- **Basic Event Display** - Shows recent events from journal files
+- **Simple Profile Management** - Create and manage commander profiles
+- **Navigation System** - Switch between Monitor and Profiles screens
+- **Help Menu** - About and License dialogs
 
 ## System Requirements
 
@@ -58,15 +69,9 @@ If you're running from source code (not using a pre-built executable):
 
 ## Installation
 
-### For End Users (Executable Version)
+**⚠️ This is a development prototype. Executable builds are not yet available.**
 
-If you have a pre-built executable:
-
-1. **Ensure Elite Dangerous is installed** and you've played it at least once
-2. **Run `EDLA.exe`** - No additional installation needed
-3. The application will automatically detect commanders from your journal files
-
-### For Developers (Source Code)
+### For Developers (Source Code Only)
 
 #### Option 1: Using Virtual Environment (Recommended)
 
@@ -107,39 +112,43 @@ If you have a pre-built executable:
 
 **Note:** Using a virtual environment is recommended to avoid conflicts with other Python projects.
 
-## Quick Start
+## Quick Start (For Developers Only)
+
+**⚠️ This is a development prototype. Not intended for end users.**
 
 1. **Ensure Elite Dangerous journal files exist**
    - Play Elite Dangerous at least once to generate journal files
    - Files are located at: `%USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\`
 
 2. **Launch the application**
-   - Executable: Double-click `EDLA.exe`
    - Source: Run `run.bat` or `python main.py`
+   - (Executable builds not yet available)
 
-3. **Select a commander** from the "Select Commander" dropdown in the top navigation bar
+3. **Select a commander** from the "Select Commander" dropdown
    - Commanders are automatically detected from journal files
 
-4. **View events** - Events will automatically appear in the Recent Events list as they occur in-game
+4. **View events** - Basic event display shows recent events from journal files
 
-5. **Manage profiles** - Go to the Profiles screen to refresh commanders from journal files or manually add profiles
+5. **Manage profiles** - Basic profile management available in Profiles screen
 
-## Usage
+## Current Functionality (Alpha 1.0)
 
 ### Monitor Screen
 
-The main monitoring interface displays:
-- Currently selected commander
-- Monitoring status
+Basic monitoring interface:
+- Commander selection
+- Monitoring status display
 - Log directory path
-- Real-time event list (updates every second)
+- Simple event list (basic display only)
 
 ### Profiles Screen
 
-Manage your commanders:
-- View all detected commanders
-- Refresh from journal files to find new commanders
-- Manually add profiles if needed
+Basic profile management:
+- View detected commanders
+- Refresh commander list from journal files
+- Manually add profiles
+
+**Note:** Many planned features are not yet implemented. This is a minimal prototype.
 
 ### Log File Location
 
@@ -197,13 +206,16 @@ EDLA/
 └── README.md              # This file
 ```
 
-## Contributing
+## Development Status
 
-Contributions are welcome! Please refer to the [Developer Guide](documents/DEVELOPER_GUIDE.md) for:
-- Development setup
-- Code style guidelines
-- Testing procedures
-- Contribution process
+**This project is in early development and is not ready for public use or testing.**
+
+For developers interested in the codebase:
+- See [Developer Guide](documents/DEVELOPER_GUIDE.md) for setup instructions
+- Check [TODO.md](TODO.md) for planned features
+- Review [Architecture Documentation](documents/ARCHITECTURE.md) for code structure
+
+**Note:** This is a personal project in active development. Many features are incomplete.
 
 ## Troubleshooting
 
@@ -237,15 +249,20 @@ Contributions are welcome! Please refer to the [Developer Guide](documents/DEVEL
 
 For more detailed troubleshooting, see the [User Guide](documents/USER_GUIDE.md).
 
-## Future Enhancements
+## Planned Features
+
+**⚠️ Most features are planned but not yet implemented.**
 
 See [TODO.md](TODO.md) for a complete list of planned features, including:
-- Expanded event tracking and analysis
+- Session tracking (profit, merits, ranks)
+- Combat, exploration, and exobiology statistics
+- Data visualization and charts
+- Advanced event filtering and search
+- Export/import functionality
 - Customizable notifications
-- Advanced statistics and analytics
-- Export/import profiles
-- Custom event filters
-- And more...
+- And much more...
+
+**This is an early prototype. Most functionality is still in development.**
 
 ## License
 
