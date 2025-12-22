@@ -1,7 +1,7 @@
 # User Guide
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-09  
+**Last Updated:** 2025-12-22  
 **License:** GPL-3.0
 
 ## Prerequisites
@@ -21,14 +21,23 @@ Before using EDLA, ensure you have:
 1. **Ensure Elite Dangerous journal files exist**
    - Play Elite Dangerous at least once to generate journal files
    - Journal files are created automatically when you start the game
+   - Location: `%USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\`
 
 2. **Run the application** using `run.bat` or `python main.py` (or double-click `EDLA.exe` if using executable)
 
-3. The application will automatically scan your Elite Dangerous journal files
+3. The application will automatically:
+   - Scan your Elite Dangerous journal files
+   - Detect commanders from journal files
+   - Load existing profiles and session data
+   - Start monitoring for new events
 
-4. Commanders found in journal files will be automatically added as profiles
+4. **Select a commander** from the "Select Commander" dropdown to start monitoring
 
-5. Select a commander from the "Select Commander" dropdown to start monitoring
+5. **Expected Results:**
+   - Monitor screen shows recent events (if any exist)
+   - Dashboard shows session statistics
+   - Profiles screen lists all detected commanders
+   - If no journal files exist, informational messages guide you
 
 ### Understanding the Interface
 
@@ -38,6 +47,7 @@ The top navigation bar provides:
 - **Select Commander Button**: Choose which commander to monitor (highlighted with white border)
 - **Monitor Button**: Switch to the monitoring screen (highlighted when active)
 - **Profiles Button**: Switch to the profiles management screen (highlighted when active)
+- **Dashboard Button**: Switch to the session dashboard screen (highlighted when active)
 - **Help Menu**: Access About and License information
 
 #### Monitor Screen
@@ -45,9 +55,17 @@ The top navigation bar provides:
 The Monitor screen is your main view for watching game events:
 
 - **Commander Selection**: Click "Select Commander" to choose which commander to monitor
-- **Status Display**: Shows whether monitoring is active
+- **Status Display**: Shows whether monitoring is active (should show "✓ Monitoring" when working)
 - **Log Directory**: Displays where journal files are being read from
 - **Recent Events**: Live list of events from Elite Dangerous (updates every second)
+
+**Expected Behavior:**
+- Events appear within 1-2 seconds of occurring in Elite Dangerous
+- Events are listed newest first (most recent at top)
+- Shows up to 50 most recent events
+- Updates automatically - no refresh needed
+- If no journal files exist, shows informational message instead of event list
+- If no events yet, shows "No events yet" message in gray text
 
 #### Profiles Screen
 
@@ -56,6 +74,33 @@ The Profiles screen manages your commanders:
 - **Existing Profiles**: List of all detected commanders
 - **Refresh Button**: Rescans journal files to find new commanders
 - **Manual Add**: Create a profile manually if needed
+
+#### Dashboard Screen
+
+The Dashboard screen provides historical session analysis:
+
+- **Statistics Display**: Shows aggregated statistics:
+  - Total Sessions
+  - Total Jumps
+  - Total Dockings
+  - Total Events
+  - First and Last Session dates
+- **Session History**: List of all game sessions with:
+  - Session start time
+  - Commander name
+  - Number of jumps
+  - Number of events
+- **Session Details**: Double-click any session to view:
+  - Start and end times
+  - Duration
+  - Ships used (first and last)
+  - Systems visited (first and last)
+  - Jump count
+  - Docking count
+  - Total events
+- **Commander Filtering**: When a commander is selected, only their sessions are shown
+- **Refresh Button**: Manually rescan all log files for new sessions
+- **Auto-Update**: Dashboard automatically refreshes when new sessions are detected
 
 #### Help Menu
 
@@ -82,6 +127,20 @@ Access application information:
 1. Go to the Profiles screen
 2. Enter a commander name in the text field
 3. Click "Add Profile"
+
+#### Viewing Session History
+
+1. Go to the Dashboard screen
+2. Select a commander (optional - shows all sessions if none selected)
+3. View statistics at the top
+4. Browse session history in the list
+5. Double-click any session to view detailed information
+
+#### Refreshing Session Data
+
+1. Go to the Dashboard screen
+2. Click "🔄 Refresh Sessions" button
+3. The application will scan all log files and update session data
 
 ## Understanding Events
 
@@ -116,6 +175,16 @@ Profiles are stored in:
 
 Each commander has a JSON file named `{CommanderName}.json`
 
+Session data is stored in:
+```
+%USERPROFILE%\.edla\sessions.json
+```
+
+Processed file tracking is stored in:
+```
+%USERPROFILE%\.edla\processed_files.json
+```
+
 ### Profile Contents
 
 Each profile contains:
@@ -127,10 +196,16 @@ Each profile contains:
 
 ### Backup Recommendations
 
-To backup your profiles:
+To backup your profiles and session data:
 1. Copy the `.edla` folder from your user directory
 2. Store it in a safe location
 3. Restore by copying it back
+
+This includes:
+- All commander profiles
+- Session history data
+- Processed file tracking
+- Application logs
 
 ## Troubleshooting
 
@@ -158,11 +233,13 @@ To backup your profiles:
 
 1. **Select Commander First**: Always select a commander before expecting events
 2. **Regular Refreshes**: Refresh commander list after creating new Elite Dangerous accounts
-3. **Profile Backups**: Regularly backup your `.edla` folder
+3. **Profile Backups**: Regularly backup your `.edla` folder (includes profiles and session data)
 4. **Multiple Commanders**: The app supports multiple commanders - switch between them as needed
 5. **Active Screen Indicator**: The highlighted navigation button shows which screen you're currently viewing
-6. **Help Menu**: Use Help → About to view version and copyright information
-7. **Application Logs**: Check `%USERPROFILE%\.edla\logs\app.log` if you encounter issues
+6. **Dashboard Usage**: Use the Dashboard to view historical session data and statistics
+7. **Session Tracking**: Sessions are automatically tracked - no manual setup required
+8. **Help Menu**: Use Help → About to view version and copyright information
+9. **Application Logs**: Check `logs/app.log` in the application directory if you encounter issues
 
 ## Getting Help
 

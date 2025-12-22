@@ -19,6 +19,9 @@ __pycache__/
 # Application Data
 .edla/
 
+# Application Logs
+logs/*.log
+
 # OS
 .DS_Store
 Thumbs.db

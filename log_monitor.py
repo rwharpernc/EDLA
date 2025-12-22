@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Callable, Optional
 from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler, FileModifiedEvent
+from watchdog.events import FileSystemEventHandler, FileModifiedEvent, FileCreatedEvent
 from config import DEFAULT_LOG_DIR
 
 
@@ -22,6 +22,12 @@ class EliteDangerousLogHandler(FileSystemEventHandler):
     def on_modified(self, event):
         """Called when a log file is modified"""
         if not event.is_directory and event.src_path.endswith('.log'):
+            self.process_log_file(Path(event.src_path))
+    
+    def on_created(self, event):
+        """Called when a new log file is created"""
+        if not event.is_directory and event.src_path.endswith('.log'):
+            # Process the new file
             self.process_log_file(Path(event.src_path))
     
     def process_log_file(self, log_file: Path):

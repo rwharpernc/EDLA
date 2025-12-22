@@ -1,7 +1,7 @@
 # Architecture Documentation
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-09  
+**Last Updated:** 2025-12-22  
 **License:** GPL-3.0
 
 ## Overview
@@ -18,6 +18,8 @@ EDLA/
 ├── log_monitor.py          # Real-time log file monitoring
 ├── event_tracker.py        # Event tracking and statistics
 ├── commander_detector.py   # Commander detection from journals
+├── session_manager.py      # Session tracking and analysis
+├── dashboard_screen.py     # Dashboard UI component
 ├── requirements.txt        # Python dependencies
 ├── documents/              # Documentation folder
 └── README.md              # Main documentation
@@ -43,6 +45,13 @@ EDLA/
   - Lists all commanders
   - Allows manual profile creation
   - Refresh from journal files
+
+- **DashboardScreen**: Session history and statistics view
+  - Displays aggregated session statistics
+  - Shows session history list
+  - Provides session details dialog
+  - Filters sessions by commander
+  - Manual refresh capability
 
 ### Configuration (`config.py`)
 
@@ -91,12 +100,32 @@ EDLA/
   - Scans all journal files on demand
   - Returns set of unique commanders
 
+### Session Manager (`session_manager.py`)
+
+- **SessionManager**: Session tracking and analysis
+  - Identifies sessions from journal files (each log file = one session)
+  - Extracts session metadata (start/end times, commander, jumps, dockings, events)
+  - Tracks processed files to prevent duplicate processing
+  - Stores session data in JSON format
+  - Provides session statistics and filtering
+  - Handles both initial scan and incremental updates
+
+### Dashboard Screen (`dashboard_screen.py`)
+
+- **DashboardScreen**: Session visualization UI
+  - Displays session statistics (total sessions, jumps, dockings, events)
+  - Shows session history list with key information
+  - Provides detailed session view dialog
+  - Filters sessions by commander
+  - Auto-refreshes when new sessions are detected
+
 ## Data Flow
 
 1. **Startup**:
    - Application initializes components
    - CommanderDetector scans journal files
    - ProfileManager auto-creates profiles
+   - SessionManager scans all existing log files (initial load)
    - LogMonitor starts watching directory
 
 2. **Event Processing**:
@@ -111,6 +140,13 @@ EDLA/
    - Profiles auto-created on detection
    - Manual profile creation available
    - All changes persisted to JSON files
+
+4. **Session Tracking**:
+   - SessionManager processes log files into sessions
+   - Tracks processed files to avoid re-processing
+   - Periodically checks for new log files (every 30 seconds)
+   - Dashboard displays session statistics and history
+   - Sessions filtered by selected commander
 
 ## Technology Stack
 

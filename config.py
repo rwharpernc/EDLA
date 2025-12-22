@@ -37,10 +37,12 @@ DOCUMENTS_DIR = BASE_DIR / "documents"
 # Default Elite Dangerous log directory
 DEFAULT_LOG_DIR = Path(os.path.expanduser("~")) / "Saved Games" / "Frontier Developments" / "Elite Dangerous"
 
-# Application data directory (for profiles, logs, etc.)
+# Application data directory (for profiles, etc.)
 APP_DATA_DIR = Path(os.path.expanduser("~")) / ".edla"
 PROFILES_DIR = APP_DATA_DIR / "profiles"
-LOGS_DIR = APP_DATA_DIR / "logs"
+
+# Application logs directory (in same directory as application)
+LOGS_DIR = BASE_DIR / "logs"
 
 # Ensure directories exist
 APP_DATA_DIR.mkdir(exist_ok=True)

@@ -9,25 +9,62 @@ from PyQt6.QtWidgets import (
     QStackedWidget, QFrame, QTextEdit, QMenu, QMessageBox
 )
 from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
-from PyQt6.QtGui import QFont, QPalette, QColor, QAction
+from PyQt6.QtGui import QFont, QPalette, QColor, QAction, QBrush
 
 import logging
+import traceback
 from config import DEFAULT_LOG_DIR, APP_NAME, APP_VERSION, APP_AUTHOR, LOGS_DIR, DOCUMENTS_DIR, BASE_DIR
 from profile_manager import ProfileManager
 from log_monitor import LogMonitor
 from event_tracker import EventTracker
+from session_manager import SessionManager
+from dashboard_screen import DashboardScreen
+from current_session_tracker import CurrentSessionTracker
+from no_journal_widget import NoJournalFilesWidget, has_journal_files
 
-# Set up logging
+# Set up logging FIRST, before any other imports that might fail
 log_file = LOGS_DIR / "app.log"
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
+try:
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file, encoding='utf-8'),
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+except Exception as e:
+    # If logging setup fails, try to write to a fallback location
+    try:
+        fallback_log = BASE_DIR / "app_error.log"
+        with open(fallback_log, 'a', encoding='utf-8') as f:
+            f.write(f"Failed to set up logging: {e}\n")
+    except:
+        pass  # If even that fails, we're out of options
+
 logger = logging.getLogger(__name__)
+
+# Set up global exception handler to catch uncaught exceptions
+def log_exception(exc_type, exc_value, exc_traceback):
+    """Log uncaught exceptions"""
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    
+    error_msg = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    logger.critical(f"Uncaught exception:\n{error_msg}")
+    
+    # Also try to write to file directly in case logging is broken
+    try:
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(f"\n{'='*80}\n")
+            f.write(f"UNCAUGHT EXCEPTION\n")
+            f.write(f"{error_msg}\n")
+            f.write(f"{'='*80}\n")
+    except:
+        pass
+
+sys.excepthook = log_exception
 
 
 class LogMonitorThread(QThread):
@@ -156,6 +193,11 @@ class ProfileScreen(QWidget):
         add_frame.setLayout(add_layout)
         layout.addWidget(add_frame)
         
+        # No journal files widget (initially hidden)
+        self.no_journal_widget = NoJournalFilesWidget()
+        self.no_journal_widget.hide()
+        layout.addWidget(self.no_journal_widget)
+        
         layout.addStretch()
         self.setLayout(layout)
     
@@ -164,9 +206,24 @@ class ProfileScreen(QWidget):
         self.profile_list.clear()
         profiles = self.profile_manager.list_profiles()
         
-        for profile_name in profiles:
-            item = QListWidgetItem(profile_name)
-            self.profile_list.addItem(item)
+        # Check for journal files
+        if not has_journal_files() and not profiles:
+            # No journal files and no profiles - show informational widget
+            self.profile_list.hide()
+            self.no_journal_widget.show()
+        else:
+            self.profile_list.show()
+            self.no_journal_widget.hide()
+            
+            if profiles:
+                for profile_name in profiles:
+                    item = QListWidgetItem(profile_name)
+                    self.profile_list.addItem(item)
+            else:
+                # Journal files exist but no profiles found
+                item = QListWidgetItem("No profiles found. Click 'Refresh from Journal Files' to scan for commanders.")
+                item.setForeground(QBrush(QColor(136, 136, 136)))  # #888888 color
+                self.profile_list.addItem(item)
     
     def refresh_from_journals(self):
         """Refresh profiles from journal files"""
@@ -278,7 +335,15 @@ class MonitorScreen(QWidget):
         """)
         layout.addWidget(self.events_list)
         
+        # No journal files widget (initially hidden)
+        self.no_journal_widget = NoJournalFilesWidget()
+        self.no_journal_widget.hide()
+        layout.addWidget(self.no_journal_widget)
+        
         self.setLayout(layout)
+        
+        # Check for journal files and show/hide widget
+        self.check_journal_files()
     
     def update_commander_display(self, commander_name: Optional[str] = None):
         """Update the commander display"""
@@ -298,37 +363,70 @@ class MonitorScreen(QWidget):
             self.status_label.setText("Status: Not monitoring")
             self.status_label.setStyleSheet("color: #888888; font-size: 12px;")
     
+    def check_journal_files(self):
+        """Check if journal files exist and show/hide appropriate widgets"""
+        if not has_journal_files():
+            self.events_list.hide()
+            self.no_journal_widget.show()
+        else:
+            self.events_list.show()
+            self.no_journal_widget.hide()
+    
     def update_events(self):
         """Update the events list"""
         self.events_list.clear()
+        
+        # Check for journal files first
+        if not has_journal_files():
+            self.check_journal_files()
+            return
+        
         events = self.event_tracker.get_recent_events(limit=50)
         
-        for event in reversed(events):  # Show newest first
-            event_type = event.get("event", "Unknown")
-            timestamp = event.get("timestamp", "")[:19] if event.get("timestamp") else "No timestamp"
-            text = f"[{timestamp}] {event_type}"
-            
-            item = QListWidgetItem(text)
+        if not events:
+            # No events yet, but journal files exist
+            item = QListWidgetItem("No events yet. Start playing Elite Dangerous to see events here.")
+            item.setForeground(QBrush(QColor(136, 136, 136)))  # #888888 color
             self.events_list.addItem(item)
+        else:
+            for event in reversed(events):  # Show newest first
+                event_type = event.get("event", "Unknown")
+                timestamp = event.get("timestamp", "")[:19] if event.get("timestamp") else "No timestamp"
+                text = f"[{timestamp}] {event_type}"
+                
+                item = QListWidgetItem(text)
+                self.events_list.addItem(item)
 
 
 class EliteDangerousApp(QMainWindow):
     """Main application window"""
     
     def __init__(self):
-        super().__init__()
-        self.profile_manager = ProfileManager()
-        self.event_tracker = EventTracker(self.profile_manager)
-        self.log_monitor = LogMonitor(self.on_log_event)
-        self.monitor_thread: Optional[LogMonitorThread] = None
-        self.is_monitoring = False
-        self.current_commander = None
-        
-        self.setWindowTitle(f"{APP_NAME} v{APP_VERSION} - Elite Dangerous Log Analyzer © {APP_AUTHOR}")
-        self.setGeometry(100, 100, 900, 700)
-        
-        # Apply dark theme
-        self.apply_dark_theme()
+        try:
+            logger.info("Initializing EliteDangerousApp...")
+            super().__init__()
+            
+            logger.info("Creating managers and trackers...")
+            self.profile_manager = ProfileManager()
+            self.event_tracker = EventTracker(self.profile_manager)
+            self.session_manager = SessionManager()
+            self.current_session_tracker = CurrentSessionTracker()
+            self.log_monitor = LogMonitor(self.on_log_event)
+            self.monitor_thread: Optional[LogMonitorThread] = None
+            self.is_monitoring = False
+            self.current_commander = None
+            
+            logger.info("Setting up window...")
+            self.setWindowTitle(f"{APP_NAME} v{APP_VERSION} - Elite Dangerous Log Analyzer © {APP_AUTHOR}")
+            self.setGeometry(100, 100, 900, 700)
+            
+            # Apply dark theme
+            self.apply_dark_theme()
+            logger.info("Dark theme applied")
+        except Exception as e:
+            logger.critical(f"Error during EliteDangerousApp initialization: {e}")
+            logger.critical(traceback.format_exc())
+            raise  # Re-raise so it gets caught by the global handler
         
         # Create central widget with stacked layout
         central_widget = QWidget()
@@ -380,9 +478,11 @@ class EliteDangerousApp(QMainWindow):
         # Create screens
         self.monitor_screen = MonitorScreen(self.event_tracker)
         self.profile_screen = ProfileScreen(self.profile_manager)
+        self.dashboard_screen = DashboardScreen(self.session_manager, self.current_session_tracker)
         
         self.stacked_widget.addWidget(self.monitor_screen)
         self.stacked_widget.addWidget(self.profile_screen)
+        self.stacked_widget.addWidget(self.dashboard_screen)
         
         # Navigation buttons (store as instance variables for style updates)
         self.monitor_btn = QPushButton("Monitor")
@@ -392,6 +492,10 @@ class EliteDangerousApp(QMainWindow):
         self.profiles_btn = QPushButton("Profiles")
         self.profiles_btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
         nav_layout.addWidget(self.profiles_btn)
+        
+        self.dashboard_btn = QPushButton("Dashboard")
+        self.dashboard_btn.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(2))
+        nav_layout.addWidget(self.dashboard_btn)
         
         nav_bar.setLayout(nav_layout)
         main_layout.addWidget(nav_bar)
@@ -422,6 +526,15 @@ class EliteDangerousApp(QMainWindow):
         self.update_timer = QTimer()
         self.update_timer.timeout.connect(self.update_ui)
         self.update_timer.start(1000)  # Update every second
+        
+        # Set up timer for checking new log files for sessions
+        self.session_check_timer = QTimer()
+        self.session_check_timer.timeout.connect(self.check_new_sessions)
+        self.session_check_timer.start(30000)  # Check every 30 seconds
+        
+        # Initial scan of all logs (only processes new ones) - do this after UI is ready
+        # Use a single-shot timer to do it after the window is shown
+        QTimer.singleShot(1000, self.initial_session_scan)
     
     def apply_dark_theme(self):
         """Apply dark theme to the application"""
@@ -476,9 +589,15 @@ class EliteDangerousApp(QMainWindow):
         if index == 0:  # Monitor screen
             self.monitor_btn.setStyleSheet(active_style)
             self.profiles_btn.setStyleSheet(inactive_style)
+            self.dashboard_btn.setStyleSheet(inactive_style)
         elif index == 1:  # Profiles screen
             self.monitor_btn.setStyleSheet(inactive_style)
             self.profiles_btn.setStyleSheet(active_style)
+            self.dashboard_btn.setStyleSheet(inactive_style)
+        elif index == 2:  # Dashboard screen
+            self.monitor_btn.setStyleSheet(inactive_style)
+            self.profiles_btn.setStyleSheet(inactive_style)
+            self.dashboard_btn.setStyleSheet(active_style)
     
     def refresh_commanders(self):
         """Refresh commander list by scanning journal files"""
@@ -521,12 +640,16 @@ class EliteDangerousApp(QMainWindow):
         self.event_tracker.set_current_commander(commander_name)
         self.commander_button.setText(commander_name)
         self.monitor_screen.update_commander_display(commander_name)
+        self.dashboard_screen.update_commander(commander_name)
         self.update_commander_menu()
     
     def on_log_event(self, event_data: Dict):
         """Handle events from log monitor"""
         if self.current_commander:
             self.event_tracker.process_event(event_data)
+        
+        # Update current session tracker
+        self.current_session_tracker.process_event(event_data)
     
     def start_monitoring(self):
         """Start monitoring log files"""
@@ -636,7 +759,38 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>."""
     
     def update_ui(self):
         """Periodically update the UI"""
-        self.monitor_screen.update_events()
+        try:
+            self.monitor_screen.update_events()
+            # Update dashboard if it's the current screen
+            if self.stacked_widget.currentIndex() == 2:
+                self.dashboard_screen.update_current_session()
+        except Exception as e:
+            logger.error(f"Error in update_ui: {e}")
+            logger.error(traceback.format_exc())
+    
+    def initial_session_scan(self):
+        """Perform initial scan of all logs after UI is ready"""
+        try:
+            logger.info("Starting initial session scan...")
+            self.session_manager.scan_all_logs()
+            logger.info("Initial session scan completed")
+        except Exception as e:
+            logger.error(f"Error during initial session scan: {e}")
+            import traceback
+            traceback.print_exc()
+            # Continue anyway - sessions can be scanned later
+    
+    def check_new_sessions(self):
+        """Check for new log files and process them for sessions"""
+        try:
+            # Scan for new log files (only processes unprocessed ones)
+            self.session_manager.scan_all_logs()
+            
+            # Refresh dashboard if it's the current screen
+            if self.stacked_widget.currentIndex() == 2:
+                self.dashboard_screen.refresh_data()
+        except Exception as e:
+            logger.error(f"Error checking for new sessions: {e}")
     
     def closeEvent(self, event):
         """Handle window close event"""
@@ -646,13 +800,39 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>."""
 
 def main():
     """Main entry point"""
-    app = QApplication(sys.argv)
-    app.setStyle('Fusion')  # Use Fusion style for better cross-platform look
-    
-    window = EliteDangerousApp()
-    window.show()
-    
-    sys.exit(app.exec())
+    try:
+        logger.info("="*80)
+        logger.info(f"Starting {APP_NAME} v{APP_VERSION}")
+        logger.info("="*80)
+        
+        app = QApplication(sys.argv)
+        app.setStyle('Fusion')  # Use Fusion style for better cross-platform look
+        
+        logger.info("Creating main window...")
+        window = EliteDangerousApp()
+        logger.info("Showing window...")
+        window.show()
+        logger.info("Application started successfully")
+        
+        sys.exit(app.exec())
+    except Exception as e:
+        logger.critical(f"Fatal error in main(): {e}")
+        logger.critical(traceback.format_exc())
+        
+        # Try to show error to user if possible
+        try:
+            from PyQt6.QtWidgets import QMessageBox
+            error_box = QMessageBox()
+            error_box.setIcon(QMessageBox.Icon.Critical)
+            error_box.setWindowTitle("Fatal Error")
+            error_box.setText(f"Application crashed:\n\n{str(e)}\n\nCheck logs/app.log for details.")
+            error_box.exec()
+        except:
+            # If we can't show a message box, at least print it
+            print(f"Fatal error: {e}")
+            print("Check logs/app.log for details")
+        
+        sys.exit(1)
 
 
 if __name__ == "__main__":

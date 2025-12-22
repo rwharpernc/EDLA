@@ -1,7 +1,7 @@
 # Elite Dangerous Log Analyzer (EDLA)
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-09  
+**Last Updated:** 2025-12-22  
 **License:** GPL-3.0  
 **Version:** Alpha 1.0 (Unreleased - Early Prototype)
 
@@ -32,6 +32,7 @@ This is a very early prototype with basic functionality. The application current
 - Commander detection from journal files
 - Simple event display
 - Basic profile management
+- Session tracking and dashboard
 
 **Many planned features are not yet implemented.** See [TODO.md](TODO.md) for planned functionality.
 
@@ -41,7 +42,8 @@ This is a very early prototype with basic functionality. The application current
 - **Commander Detection** - Automatically scans journal files for commanders
 - **Basic Event Display** - Shows recent events from journal files
 - **Simple Profile Management** - Create and manage commander profiles
-- **Navigation System** - Switch between Monitor and Profiles screens
+- **Session Dashboard** - View historical session data, statistics, and session history
+- **Navigation System** - Switch between Monitor, Profiles, and Dashboard screens
 - **Help Menu** - About and License dialogs
 
 ## System Requirements
@@ -131,6 +133,27 @@ If you're running from source code (not using a pre-built executable):
 
 5. **Manage profiles** - Basic profile management available in Profiles screen
 
+## How It Works
+
+EDLA monitors Elite Dangerous journal files in real-time using file system monitoring. When Elite Dangerous creates or modifies log files, EDLA:
+
+1. **Detects Changes** - Uses `watchdog` library to monitor the log directory
+2. **Parses Events** - Reads new lines from log files and parses JSON events
+3. **Processes Data** - Updates statistics, tracks sessions, and maintains profiles
+4. **Updates UI** - Displays events and statistics in real-time (updates every second)
+
+**Data Flow:**
+```
+Journal File → LogMonitor → EventTracker → ProfileManager/SessionManager → UI
+```
+
+**Storage:**
+- Profiles: `%USERPROFILE%\.edla\profiles\{CommanderName}.json`
+- Sessions: `%USERPROFILE%\.edla\sessions.json`
+- Logs: `logs/app.log` (application directory)
+
+See [documents/HOW_IT_WORKS.md](documents/HOW_IT_WORKS.md) for detailed technical documentation.
+
 ## Current Functionality (Alpha 1.0)
 
 ### Monitor Screen
@@ -147,6 +170,22 @@ Basic profile management:
 - View detected commanders
 - Refresh commander list from journal files
 - Manually add profiles
+
+### Dashboard Screen
+
+Session history and statistics:
+- Aggregated statistics (total sessions, jumps, dockings, events)
+- Session history list with key information
+- Session details dialog (double-click to view)
+- Commander filtering
+- Automatic session tracking from journal files
+
+**Expected Results:**
+- Events appear in real-time within 1-2 seconds of occurring in-game
+- Statistics update automatically as you play
+- Sessions are tracked automatically from LoadGame events
+- Commanders are auto-detected from journal files
+- All data persists between application restarts
 
 **Note:** Many planned features are not yet implemented. This is a minimal prototype.
 
@@ -170,11 +209,22 @@ Each commander has their own JSON profile file containing:
 - Statistics (event counts, last ship, last system, etc.)
 - Tracked events (last 1000 events)
 
+Session data is stored in:
+```
+%USERPROFILE%\.edla\sessions.json
+```
+
+Processed file tracking is stored in:
+```
+%USERPROFILE%\.edla\processed_files.json
+```
+
 ## Documentation
 
 Comprehensive documentation is available in the `documents/` folder:
 
 - **[User Guide](documents/USER_GUIDE.md)** - Complete user documentation with troubleshooting
+- **[How It Works](documents/HOW_IT_WORKS.md)** - Detailed explanation of how the application works and expected results
 - **[Developer Guide](documents/DEVELOPER_GUIDE.md)** - Information for developers and contributors
 - **[Build Guide](documents/BUILD_GUIDE.md)** - Instructions for building executables and installers
 - **[Architecture Documentation](documents/ARCHITECTURE.md)** - Project structure and design
@@ -195,6 +245,8 @@ EDLA/
 ├── log_monitor.py          # Log file monitoring
 ├── event_tracker.py        # Event tracking
 ├── commander_detector.py  # Commander detection
+├── session_manager.py     # Session tracking and analysis
+├── dashboard_screen.py     # Dashboard UI component
 ├── requirements.txt        # Python dependencies
 ├── documents/              # Documentation folder
 │   ├── USER_GUIDE.md
@@ -254,7 +306,7 @@ For more detailed troubleshooting, see the [User Guide](documents/USER_GUIDE.md)
 **⚠️ Most features are planned but not yet implemented.**
 
 See [TODO.md](TODO.md) for a complete list of planned features, including:
-- Session tracking (profit, merits, ranks)
+- Enhanced session tracking (profit, merits, ranks)
 - Combat, exploration, and exobiology statistics
 - Data visualization and charts
 - Advanced event filtering and search

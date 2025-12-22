@@ -1,7 +1,7 @@
 # Developer Guide
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-09  
+**Last Updated:** 2025-12-22  
 **License:** GPL-3.0
 
 ## Prerequisites
@@ -44,6 +44,8 @@ pip install black flake8 mypy pytest
 - **log_monitor.py**: File system monitoring and log parsing
 - **event_tracker.py**: Event processing and statistics
 - **commander_detector.py**: Commander detection from journal files
+- **session_manager.py**: Session tracking and analysis from log files
+- **dashboard_screen.py**: Dashboard UI component for session visualization
 
 ### Adding New Features
 
@@ -60,12 +62,13 @@ pip install black flake8 mypy pytest
 
 #### Adding a New UI Screen
 
-1. Create a new QWidget class in `main.py`
+1. Create a new QWidget class (can be in `main.py` or separate file like `dashboard_screen.py`)
 2. Add it to the stacked widget:
    ```python
    self.stacked_widget.addWidget(your_new_screen)
    ```
 3. Add navigation button in the nav bar
+4. Update `update_nav_button_styles()` to handle the new screen index
 
 #### Adding Configuration Options
 
@@ -98,6 +101,11 @@ Currently, no test suite is implemented. Future testing should include:
 - [ ] Events are tracked correctly
 - [ ] Profile creation works
 - [ ] UI updates properly
+- [ ] Dashboard displays session statistics
+- [ ] Session history is populated correctly
+- [ ] Session details dialog works
+- [ ] Commander filtering works on dashboard
+- [ ] New log files are processed automatically
 - [ ] No memory leaks during extended use
 
 ## Debugging
@@ -106,8 +114,9 @@ Currently, no test suite is implemented. Future testing should include:
 
 EDLA includes built-in logging that writes to:
 ```
-%USERPROFILE%\.edla\logs\app.log
+logs/app.log
 ```
+(Relative to the application directory)
 
 Logs include:
 - Application startup/shutdown
@@ -203,7 +212,8 @@ The installer will be created in `Output/EDLA_Setup.exe`
 1. **Test Executable:**
    - Run `dist/EDLA.exe` directly
    - Verify all features work
-   - Check that profiles/logs are created in user directory
+   - Check that profiles are created in user directory
+   - Check that logs are created in application directory
 
 2. **Test Installer:**
    - Install on clean Windows system
@@ -239,8 +249,9 @@ When adding features:
 - Update README.md if user-facing
 - Update USER_GUIDE.md for user features
 - Update ARCHITECTURE.md for structural changes
-- Update CHANGELOG.md for releases
+- Update CHANGELOG.md with date and changes
 - Update TODO.md for completed items
+- Update DEVELOPER_GUIDE.md for developer-facing changes
 
 ## Elite Dangerous Journal Format
 
