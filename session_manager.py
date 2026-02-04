@@ -1,71 +1,144 @@
 """
-Session Manager for tracking Elite Dangerous game sessions
+Session Manager for tracking Elite Dangerous game sessions.
+
+Session data and processed-file tracking are stored in a SQLite database
+(%USERPROFILE%\\.edla\\edla.db). On first run with existing JSON files,
+data is migrated automatically and the old files are renamed to .migrated.
 """
 import json
 import re
+import sqlite3
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 from datetime import datetime
-from config import DEFAULT_LOG_DIR, APP_DATA_DIR
+from config import DEFAULT_LOG_DIR, APP_DATA_DIR, EDLA_DB_PATH
 
 
 class SessionManager:
-    """Manages game sessions from journal log files"""
-    
+    """Manages game sessions from journal log files. Uses SQLite for persistence."""
+
     def __init__(self, log_dir: Path = DEFAULT_LOG_DIR):
         self.log_dir = log_dir
-        self.sessions_file = APP_DATA_DIR / "sessions.json"
-        self.processed_files_file = APP_DATA_DIR / "processed_files.json"
+        self.db_path = EDLA_DB_PATH
         self.sessions: Dict[str, Dict] = {}  # session_id -> session_data
         self.processed_files: Set[str] = set()  # Set of processed file paths
-        
-        # Load existing data
+
+        self._init_db()
+        self._migrate_from_json_if_present()
         self.load_sessions()
         self.load_processed_files()
-    
-    def load_sessions(self):
-        """Load sessions from disk"""
-        if self.sessions_file.exists():
+
+    def _get_connection(self) -> sqlite3.Connection:
+        """Return a connection to the SQLite database."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def _init_db(self):
+        """Create database and tables if they do not exist."""
+        with self._get_connection() as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS sessions (
+                    session_id TEXT PRIMARY KEY,
+                    commander TEXT,
+                    start_time TEXT,
+                    data TEXT NOT NULL
+                )
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS processed_files (
+                    path TEXT PRIMARY KEY
+                )
+            """)
+            conn.commit()
+
+    def _migrate_from_json_if_present(self):
+        """If legacy sessions.json or processed_files.json exist, migrate into SQLite and rename."""
+        sessions_file = APP_DATA_DIR / "sessions.json"
+        processed_file = APP_DATA_DIR / "processed_files.json"
+
+        if sessions_file.exists():
             try:
-                with open(self.sessions_file, 'r', encoding='utf-8') as f:
+                with open(sessions_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    self.sessions = data.get("sessions", {})
+                    sessions = data.get("sessions", {})
+                with self._get_connection() as conn:
+                    for sid, sdata in sessions.items():
+                        commander = (sdata or {}).get("commander") or ""
+                        start_time = (sdata or {}).get("start_time") or ""
+                        conn.execute(
+                            "INSERT OR REPLACE INTO sessions (session_id, commander, start_time, data) VALUES (?, ?, ?, ?)",
+                            (sid, commander, start_time, json.dumps(sdata)),
+                        )
+                    conn.commit()
+                sessions_file.rename(sessions_file.with_suffix(".json.migrated"))
+                print("Migrated sessions from sessions.json to SQLite.")
             except Exception as e:
-                print(f"Error loading sessions: {e}")
-                self.sessions = {}
-    
-    def save_sessions(self):
-        """Save sessions to disk"""
+                print(f"Migration of sessions.json skipped or failed: {e}")
+
+        if processed_file.exists():
+            try:
+                with open(processed_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    paths = data.get("processed_files", [])
+                with self._get_connection() as conn:
+                    for path in paths:
+                        conn.execute("INSERT OR IGNORE INTO processed_files (path) VALUES (?)", (path,))
+                    conn.commit()
+                processed_file.rename(processed_file.with_suffix(".json.migrated"))
+                print("Migrated processed_files.json to SQLite.")
+            except Exception as e:
+                print(f"Migration of processed_files.json skipped or failed: {e}")
+
+    def load_sessions(self):
+        """Load sessions from the SQLite database into memory."""
+        self.sessions = {}
         try:
-            data = {
-                "sessions": self.sessions,
-                "last_updated": datetime.now().isoformat()
-            }
-            with open(self.sessions_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2)
+            with self._get_connection() as conn:
+                for row in conn.execute("SELECT session_id, data FROM sessions"):
+                    try:
+                        self.sessions[row["session_id"]] = json.loads(row["data"])
+                    except (json.JSONDecodeError, TypeError) as e:
+                        print(f"Invalid session data for {row['session_id']}: {e}")
+        except Exception as e:
+            print(f"Error loading sessions from database: {e}")
+            self.sessions = {}
+
+    def save_sessions(self):
+        """Persist current sessions to the SQLite database."""
+        try:
+            with self._get_connection() as conn:
+                conn.execute("DELETE FROM sessions")
+                for session_id, session_data in self.sessions.items():
+                    commander = (session_data or {}).get("commander") or ""
+                    start_time = (session_data or {}).get("start_time") or ""
+                    conn.execute(
+                        "INSERT INTO sessions (session_id, commander, start_time, data) VALUES (?, ?, ?, ?)",
+                        (session_id, commander, start_time, json.dumps(session_data)),
+                    )
+                conn.commit()
         except Exception as e:
             print(f"Error saving sessions: {e}")
-    
+
     def load_processed_files(self):
-        """Load list of processed files"""
-        if self.processed_files_file.exists():
-            try:
-                with open(self.processed_files_file, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                    self.processed_files = set(data.get("processed_files", []))
-            except Exception as e:
-                print(f"Error loading processed files: {e}")
-                self.processed_files = set()
-    
-    def save_processed_files(self):
-        """Save list of processed files"""
+        """Load processed file paths from the SQLite database."""
+        self.processed_files = set()
         try:
-            data = {
-                "processed_files": list(self.processed_files),
-                "last_updated": datetime.now().isoformat()
-            }
-            with open(self.processed_files_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2)
+            with self._get_connection() as conn:
+                for row in conn.execute("SELECT path FROM processed_files"):
+                    self.processed_files.add(row["path"])
+        except Exception as e:
+            print(f"Error loading processed files: {e}")
+            self.processed_files = set()
+
+    def save_processed_files(self):
+        """Persist processed file list to the SQLite database."""
+        try:
+            with self._get_connection() as conn:
+                conn.execute("DELETE FROM processed_files")
+                for path in self.processed_files:
+                    conn.execute("INSERT INTO processed_files (path) VALUES (?)", (path,))
+                conn.commit()
         except Exception as e:
             print(f"Error saving processed files: {e}")
     
@@ -73,6 +146,13 @@ class SessionManager:
         """Generate a unique session ID from log file name"""
         # Use the file name as session ID (it contains timestamp)
         return log_file.name
+
+    def get_log_files_to_process(self) -> List[Path]:
+        """Return log files that are not yet in processed_files. Quick check, no heavy I/O."""
+        if not self.log_dir.exists():
+            return []
+        all_logs = sorted(self.log_dir.glob("*.log"))
+        return [p for p in all_logs if str(p) not in self.processed_files]
     
     def parse_timestamp_from_filename(self, filename: str) -> Optional[datetime]:
         """Extract timestamp from journal filename"""
@@ -86,23 +166,39 @@ class SessionManager:
                 return None
         return None
     
-    def scan_all_logs(self, force_rescan: bool = False):
-        """Scan all log files and extract session data"""
+    def scan_all_logs(
+        self,
+        force_rescan: bool = False,
+        progress_callback=None,
+        is_cancelled=None,
+    ):
+        """Scan all log files and extract session data.
+
+        progress_callback(current, total) is called after each file (current and total are 1-based counts).
+        If is_cancelled() returns True, scanning stops and data is saved up to that point.
+        """
         try:
             if not self.log_dir.exists():
                 return
-            
-            log_files = list(self.log_dir.glob("*.log"))
+
+            log_files = sorted(self.log_dir.glob("*.log"))
+            total = len(log_files)
             new_sessions = 0
-            
-            for log_file in sorted(log_files):
+            processed_count = 0
+
+            for log_file in log_files:
+                if is_cancelled and is_cancelled():
+                    break
                 try:
                     file_path_str = str(log_file)
-                    
+
                     # Skip if already processed (unless force rescan)
                     if not force_rescan and file_path_str in self.processed_files:
+                        if progress_callback:
+                            processed_count += 1
+                            progress_callback(processed_count, total)
                         continue
-                    
+
                     # Process the log file
                     session_data = self.process_log_file(log_file)
                     if session_data:
@@ -112,8 +208,11 @@ class SessionManager:
                         new_sessions += 1
                 except Exception as e:
                     print(f"Error processing log file {log_file}: {e}")
-                    continue
-            
+                finally:
+                    processed_count += 1
+                    if progress_callback:
+                        progress_callback(processed_count, total)
+
             if new_sessions > 0:
                 self.save_sessions()
                 self.save_processed_files()

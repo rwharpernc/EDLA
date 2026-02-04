@@ -1,8 +1,9 @@
 @echo off
 REM Build script for creating EDLA installer
 REM This is a template - requires Inno Setup to be installed
+REM App data (profiles, edla.db) is stored in user .edla folder
 REM Author: R.W. Harper
-REM Last Updated: 2025-12-09
+REM Last Updated: 2025-02-04
 
 echo ========================================
 echo EDLA Installer Builder

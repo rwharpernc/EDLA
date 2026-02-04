@@ -1,6 +1,7 @@
 @echo off
 REM Elite Dangerous Log Analyzer - Run Script
-REM This script runs the EDLA application with logging
+REM This script runs the EDLA application with logging.
+REM Session data is stored in SQLite (%%USERPROFILE%%\.edla\edla.db).
 
 REM Create logs directory if it doesn't exist
 if not exist "logs" mkdir logs

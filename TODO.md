@@ -1,7 +1,7 @@
 # TODO
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-22  
+**Last Updated:** 2025-02-04 (documentation and TODO review)  
 **License:** GPL-3.0
 
 This file tracks planned features, improvements, and tasks for the Elite Dangerous Log Analyzer.
@@ -13,7 +13,7 @@ This file tracks planned features, improvements, and tasks for the Elite Dangero
 - [ ] Implement event search functionality
 - [x] Session tracking: start/stop sessions, compute profit per session (Basic session tracking implemented - tracks sessions from log files)
 - [ ] Track Powerplay merits earned per session and cumulatively
-- [ ] Track ranks (combat/trade/exploration/exobiology/power) with deltas
+- [x] Track ranks (combat/trade/exploration/CQC/mercenary/exobiologist/Federation/Empire) — display on Home with in-game names; progress % shown (deltas/history not yet)
 - [ ] Track combat stats (kills, deaths, bounties, bonds) with session totals
 - [ ] Track exobiology stats (samples, species, payouts) with session totals
 - [ ] Track exploration stats (jumps, scans, FSS finds, credits) with session totals
@@ -49,7 +49,7 @@ This file tracks planned features, improvements, and tasks for the Elite Dangero
 
 - [ ] Add unit tests
 - [ ] Add integration tests
-- [ ] Create user documentation
+- [x] Create user documentation (USER_GUIDE.md, HOW_IT_WORKS.md, and other docs in documents/)
 - [ ] Add keyboard shortcuts
 - [ ] Implement event categories/tags
 - [ ] Add event export to CSV/JSON

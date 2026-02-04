@@ -116,10 +116,10 @@ class LogMonitor:
         print(f"Started monitoring: {self.log_dir}")
     
     def stop(self):
-        """Stop monitoring"""
+        """Stop monitoring (with timeout so shutdown does not hang)"""
         if self.observer and self.is_monitoring:
             self.observer.stop()
-            self.observer.join()
+            self.observer.join(timeout=3.0)
             self.is_monitoring = False
             print("Stopped monitoring")
 

@@ -1,7 +1,7 @@
 # Elite Dangerous Journal Format
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-09  
+**Last Updated:** 2025-02-04  
 **License:** GPL-3.0
 
 ## Overview
@@ -171,6 +171,40 @@ The `LoadGame` event contains commander information and is crucial for detection
   "VictimFaction": "Pirates"
 }
 ```
+
+### Rank and Progress Events
+
+The game sends `Rank` and `Progress` events (e.g. at session start and when ranks change). **Rank** includes numeric values for Combat, Trade, Explore, Empire, Federation, CQC, and (Odyssey) Mercenary, Exobiologist. **Progress** gives 0–100 percentage toward the next rank per category.
+
+**Indexing for display:** Federation and Empire use 0 for “no rank” (Federation: 0=None, 1=Recruit … 14=Admiral; Empire: 0=None, 1=Outsider … 7=Baron … 14=King). Skill ranks (Combat, Trade, Explore, CQC, Mercenary, Exobiologist) are 0-based with 0 as the first rank (e.g. Combat 0=Harmless, 8=Elite). EDLA maps these to in-game rank names on the Home screen.
+
+### Reputation Event
+
+The game sends a `Reputation` event (e.g. when docking) with faction standings. EDLA supports two formats:
+
+**Flat format** – faction names as keys, numeric value (0–100 or 0.0–1.0):
+```json
+{
+  "timestamp": "2024-12-01T12:00:00Z",
+  "event": "Reputation",
+  "Federation": 75,
+  "Empire": 50
+}
+```
+
+**Factions array** – list of objects with `Name` and `Reputation` (number or text like "Friendly", "Allied"):
+```json
+{
+  "timestamp": "2024-12-01T12:00:00Z",
+  "event": "Reputation",
+  "Factions": [
+    { "Name": "Federation", "Reputation": 75 },
+    { "Name": "Empire", "Reputation": "Friendly" }
+  ]
+}
+```
+
+Text reputation levels are mapped to 0–100 (e.g. Hostile=0, Unfriendly=25, Neutral=50, Cordial=60, Friendly=75, Allied=100).
 
 ## Event Processing
 

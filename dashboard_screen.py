@@ -33,10 +33,17 @@ class DashboardScreen(QWidget):
     
     def build_ui(self):
         """Build the dashboard UI"""
+        outer = QVBoxLayout()
+        outer.setContentsMargins(0, 0, 0, 0)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
+        scroll_content = QWidget()
         layout = QVBoxLayout()
         layout.setSpacing(10)
         layout.setContentsMargins(15, 15, 15, 15)
-        
+
         # Title
         title = QLabel("Session Dashboard")
         title_font = QFont()
@@ -243,14 +250,18 @@ class DashboardScreen(QWidget):
             }
         """)
         self.sessions_list.itemDoubleClicked.connect(self.show_session_details)
+        self.sessions_list.setMinimumHeight(100)
         layout.addWidget(self.sessions_list)
         
         # No journal files widget (initially hidden)
         self.no_journal_widget = NoJournalFilesWidget()
         self.no_journal_widget.hide()
         layout.addWidget(self.no_journal_widget)
-        
-        self.setLayout(layout)
+
+        scroll_content.setLayout(layout)
+        scroll.setWidget(scroll_content)
+        outer.addWidget(scroll)
+        self.setLayout(outer)
     
     def update_commander(self, commander_name: Optional[str] = None):
         """Update the current commander"""
@@ -357,6 +368,75 @@ class DashboardScreen(QWidget):
             info_label = QLabel(info_text)
             info_label.setStyleSheet("color: #666666; font-size: 10px; padding: 5px;")
             self.current_stats_layout.addWidget(info_label, 7, 0, 1, 2)
+
+            # Active missions
+            missions = stats.get("missions", {})
+            active_missions = missions.get("active", [])
+            completed_list = missions.get("completed_list", [])
+            failed_list = missions.get("failed_list", [])
+
+            missions_frame = QFrame()
+            missions_frame.setStyleSheet("QFrame { background-color: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 4px; padding: 8px; }")
+            missions_inner = QVBoxLayout()
+            missions_inner.setSpacing(4)
+            mlab = QLabel("Active Missions")
+            mlab.setStyleSheet("color: #4ec9b0; font-size: 11px; font-weight: bold;")
+            missions_inner.addWidget(mlab)
+            if active_missions:
+                for m in active_missions:
+                    name = m.get("Name", "Unknown")
+                    faction = m.get("Faction", "")
+                    dest = m.get("DestinationSystem") or m.get("DestinationStation") or ""
+                    line = f"• {name}"
+                    if faction:
+                        line += f" ({faction})"
+                    if dest:
+                        line += f" → {dest}"
+                    lbl = QLabel(line)
+                    lbl.setStyleSheet("color: #cccccc; font-size: 10px;")
+                    lbl.setWordWrap(True)
+                    missions_inner.addWidget(lbl)
+            else:
+                none_lbl = QLabel("No active missions")
+                none_lbl.setStyleSheet("color: #666666; font-size: 10px;")
+                missions_inner.addWidget(none_lbl)
+            if completed_list or failed_list:
+                sum_lbl = QLabel(f"This session: {len(completed_list)} completed, {len(failed_list)} failed")
+                sum_lbl.setStyleSheet("color: #888888; font-size: 9px;")
+                missions_inner.addWidget(sum_lbl)
+            missions_frame.setLayout(missions_inner)
+            self.current_stats_layout.addWidget(missions_frame, 8, 0, 1, 2)
+
+            # Reputation
+            rep = stats.get("reputation", {})
+            rep_frame = QFrame()
+            rep_frame.setStyleSheet("QFrame { background-color: #1e1e1e; border: 1px solid #3c3c3c; border-radius: 4px; padding: 8px; }")
+            rep_inner = QVBoxLayout()
+            rep_inner.setSpacing(4)
+            rlab = QLabel("Reputation")
+            rlab.setStyleSheet("color: #4ec9b0; font-size: 11px; font-weight: bold;")
+            rep_inner.addWidget(rlab)
+            if rep:
+                for faction_name, value in sorted(rep.items()):
+                    if faction_name in ("event", "timestamp"):
+                        continue
+                    try:
+                        if 0 <= value <= 1:
+                            pct = f"{value * 100:.0f}%"
+                        else:
+                            pct = f"{value:.0f}"
+                    except Exception:
+                        pct = str(value)
+                    lbl = QLabel(f"{faction_name}: {pct}")
+                    lbl.setStyleSheet("color: #cccccc; font-size: 10px;")
+                    rep_inner.addWidget(lbl)
+            else:
+                none_lbl = QLabel("No reputation data yet (Reputation event not received)")
+                none_lbl.setStyleSheet("color: #666666; font-size: 10px;")
+                none_lbl.setWordWrap(True)
+                rep_inner.addWidget(none_lbl)
+            rep_frame.setLayout(rep_inner)
+            self.current_stats_layout.addWidget(rep_frame, 9, 0, 1, 2)
         except Exception as e:
             print(f"Error updating current session: {e}")
             import traceback

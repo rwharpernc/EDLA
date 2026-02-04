@@ -34,12 +34,20 @@ class CommanderProfile:
             json.dump(self.data, f, indent=2)
     
     def load(self):
-        """Load profile from disk"""
-        if self.profile_file.exists():
-            with open(self.profile_file, 'r') as f:
+        """Load profile from disk. Returns False if file is missing or invalid JSON."""
+        if not self.profile_file.exists():
+            return False
+        try:
+            with open(self.profile_file, 'r', encoding='utf-8') as f:
                 self.data = json.load(f)
             return True
-        return False
+        except json.JSONDecodeError as e:
+            # Corrupted or malformed JSON - skip this profile so the app doesn't crash
+            print(f"Invalid JSON in profile {self.profile_file.name}: {e}")
+            return False
+        except Exception as e:
+            print(f"Error loading profile {self.profile_file.name}: {e}")
+            return False
     
     def add_event(self, event_data: Dict):
         """Add a tracked event to the profile"""

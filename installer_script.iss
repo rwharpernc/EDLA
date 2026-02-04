@@ -1,12 +1,12 @@
 ; Inno Setup Script for EDLA
 ; Author: R.W. Harper
-; Last Updated: 2025-12-09
+; Last Updated: 2025-02-04
 ;
 ; This script requires Inno Setup to be installed
 ; Download from: https://jrsoftware.org/isdl.php
 
 #define MyAppName "EDLA"
-#define MyAppVersion "0.1.0"
+#define MyAppVersion "1.0.3"
 #define MyAppPublisher "R.W. Harper"
 #define MyAppURL "https://github.com/yourusername/EDLA"
 #define MyAppExeName "EDLA.exe"

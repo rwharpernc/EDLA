@@ -1,7 +1,7 @@
 # Build Guide
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-09  
+**Last Updated:** 2025-02-04  
 **License:** GPL-3.0
 
 This guide explains how to build EDLA as a Windows executable and create an installer.
@@ -69,7 +69,8 @@ This guide explains how to build EDLA as a Windows executable and create an inst
 2. Verify:
    - Application starts without errors
    - All features work correctly
-   - Profiles are created in user directory
+   - Profiles are created in user directory (`%USERPROFILE%\.edla\profiles\`)
+   - Session database is created (`%USERPROFILE%\.edla\edla.db`) — SQLite, no extra install
    - Logs are written to user directory
    - No console window appears (GUI-only)
 
@@ -185,6 +186,7 @@ Before distributing:
 - [ ] No console window appears
 - [ ] Logs write to correct location
 - [ ] Profiles save correctly
+- [ ] Session database (edla.db) is created and used in app data directory
 
 ## File Sizes
 

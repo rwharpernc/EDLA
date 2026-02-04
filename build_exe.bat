@@ -1,7 +1,8 @@
 @echo off
 REM Build script for creating EDLA executable
+REM Session data uses SQLite (Python stdlib - no extra runtime).
 REM Author: R.W. Harper
-REM Last Updated: 2025-12-09
+REM Last Updated: 2025-02-04
 
 echo ========================================
 echo EDLA Executable Builder

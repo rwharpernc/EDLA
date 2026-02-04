@@ -1,9 +1,9 @@
 # Elite Dangerous Log Analyzer (EDLA)
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-22  
+**Last Updated:** 2025-02-04  
 **License:** GPL-3.0  
-**Version:** Alpha 1.0 (Unreleased - Early Prototype)
+**Version:** Alpha 1.03
 
 > **⚠️ WARNING: This is an early prototype and is NOT for public use or testing. The project is in active development and many features are incomplete or not yet implemented.**
 
@@ -36,14 +36,17 @@ This is a very early prototype with basic functionality. The application current
 
 **Many planned features are not yet implemented.** See [TODO.md](TODO.md) for planned functionality.
 
-## Current Features (Alpha 1.0)
+## Current Features (Alpha 1.03)
 
 - **Basic UI Framework** - PyQt6-based dark-themed interface
 - **Commander Detection** - Automatically scans journal files for commanders
 - **Basic Event Display** - Shows recent events from journal files
 - **Simple Profile Management** - Create and manage commander profiles
 - **Session Dashboard** - View historical session data, statistics, and session history
-- **Navigation System** - Switch between Monitor, Profiles, and Dashboard screens
+- **Missions & Reputation** - Dedicated tab for active missions, completed/failed this session, and faction reputation
+- **Home & startup snapshot** - Welcome and commander ranks (Combat, Trade, Explore, CQC, Mercenary, Exobiologist, Federation, Empire), progress, powerplay, superpower reputation
+- **Navigation System** - Home, Monitor, Profiles, Dashboard, Missions; commander switching bar in nav
+- **Resizable window** - Full resizing with scrollable panels when content overflows
 - **Help Menu** - About and License dialogs
 
 ## System Requirements
@@ -149,12 +152,12 @@ Journal File → LogMonitor → EventTracker → ProfileManager/SessionManager �
 
 **Storage:**
 - Profiles: `%USERPROFILE%\.edla\profiles\{CommanderName}.json`
-- Sessions: `%USERPROFILE%\.edla\sessions.json`
+- Sessions and processed-file list: `%USERPROFILE%\.edla\edla.db` (SQLite; no extra install)
 - Logs: `logs/app.log` (application directory)
 
 See [documents/HOW_IT_WORKS.md](documents/HOW_IT_WORKS.md) for detailed technical documentation.
 
-## Current Functionality (Alpha 1.0)
+## Current Functionality (Alpha 1.03)
 
 ### Monitor Screen
 
@@ -209,15 +212,11 @@ Each commander has their own JSON profile file containing:
 - Statistics (event counts, last ship, last system, etc.)
 - Tracked events (last 1000 events)
 
-Session data is stored in:
+Session data and processed-file tracking are stored in a SQLite database:
 ```
-%USERPROFILE%\.edla\sessions.json
+%USERPROFILE%\.edla\edla.db
 ```
-
-Processed file tracking is stored in:
-```
-%USERPROFILE%\.edla\processed_files.json
-```
+(SQLite is included with Python; no separate database install. Old `sessions.json` / `processed_files.json` are migrated automatically on first run.)
 
 ## Documentation
 
@@ -229,6 +228,7 @@ Comprehensive documentation is available in the `documents/` folder:
 - **[Build Guide](documents/BUILD_GUIDE.md)** - Instructions for building executables and installers
 - **[Architecture Documentation](documents/ARCHITECTURE.md)** - Project structure and design
 - **[Journal Format Guide](documents/JOURNAL_FORMAT.md)** - Elite Dangerous journal file format reference
+- **[JOURNAL_READER_REFERENCE.md](documents/JOURNAL_READER_REFERENCE.md)** - EliteJournalReader (C#) review and EDLA porting notes
 
 ### Additional Documentation
 
@@ -245,14 +245,20 @@ EDLA/
 ├── log_monitor.py          # Log file monitoring
 ├── event_tracker.py        # Event tracking
 ├── commander_detector.py  # Commander detection
-├── session_manager.py     # Session tracking and analysis
-├── dashboard_screen.py     # Dashboard UI component
-├── requirements.txt        # Python dependencies
-├── documents/              # Documentation folder
+├── session_manager.py          # Session tracking and analysis (SQLite)
+├── dashboard_screen.py         # Dashboard UI component
+├── missions_reputation_screen.py  # Missions & Reputation view
+├── journal_aux_reader.py       # Cargo/NavRoute/Market reader
+├── current_session_tracker.py  # Real-time session and mission/reputation
+├── requirements.txt            # Python dependencies
+├── documents/                  # Documentation folder
 │   ├── USER_GUIDE.md
+│   ├── HOW_IT_WORKS.md
 │   ├── DEVELOPER_GUIDE.md
+│   ├── BUILD_GUIDE.md
 │   ├── ARCHITECTURE.md
-│   └── JOURNAL_FORMAT.md
+│   ├── JOURNAL_FORMAT.md
+│   └── JOURNAL_READER_REFERENCE.md
 ├── CHANGELOG.md           # Version history
 ├── TODO.md                 # Project tasks
 └── README.md              # This file
@@ -338,4 +344,4 @@ See the [LICENSE](LICENSE) file for the full license text, or view it in the app
 
 **Author:** R.W. Harper  
 **Project Name:** EDLA (temporary - subject to change)  
-**Version:** Alpha 1.0 (Unreleased)
+**Version:** Alpha 1.03

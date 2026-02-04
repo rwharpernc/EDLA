@@ -1,7 +1,7 @@
 # Developer Guide
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-22  
+**Last Updated:** 2025-02-04  
 **License:** GPL-3.0
 
 ## Prerequisites
@@ -26,6 +26,10 @@
    pip install -r requirements.txt
    ```
 
+### Data Storage
+
+Session and processed-file data use **SQLite** (`%USERPROFILE%\.edla\edla.db`). The `sqlite3` module is part of the Python standard library, so no extra dependency is required. Commander profiles remain in JSON files under `profiles\`.
+
 ### Development Dependencies
 
 For development, you may want to install additional tools:
@@ -38,14 +42,19 @@ pip install black flake8 mypy pytest
 
 ### Module Responsibilities
 
-- **main.py**: GUI application, UI components, event handling
+- **main.py**: GUI application, UI components (Home, Monitor, Profiles, Dashboard, Missions), event handling, commander bar, log revalidation
 - **config.py**: Configuration constants and path management
-- **profile_manager.py**: Profile CRUD operations and persistence
+- **profile_manager.py**: Profile CRUD operations and persistence (JSON)
 - **log_monitor.py**: File system monitoring and log parsing
 - **event_tracker.py**: Event processing and statistics
 - **commander_detector.py**: Commander detection from journal files
-- **session_manager.py**: Session tracking and analysis from log files
+- **session_manager.py**: Session tracking and analysis from log files; persists sessions and processed-file list in SQLite (`edla.db`)
 - **dashboard_screen.py**: Dashboard UI component for session visualization
+- **missions_reputation_screen.py**: Missions & Reputation UI (missions ready to turn in, completed/failed this session, Superpower Reputation pane). Refreshes only when mission/reputation data actually changes to avoid sluggishness.
+- **journal_aux_reader.py**: Reads auxiliary journal JSON (Cargo.json, NavRoute.json, Market.json) from the journal directory
+- **journal_startup_reader.py**: Reads the latest journal file and extracts startup sequence (LoadGame, Rank, Progress, Powerplay, Reputation) for the Home screen snapshot
+- **current_session_tracker.py**: Real-time session statistics and mission/reputation tracking (MissionAccepted, MissionCompleted, MissionFailed, MissionAbandoned, Reputation events). Reputation event supports both flat key-value and a `Factions` array; text levels (Friendly, Allied, etc.) are mapped to 0–100. Feeds Dashboard Current Session and Missions & Reputation screen.
+- **no_journal_widget.py**: Reusable “no journal files” informational widget
 
 ### Adding New Features
 
@@ -62,7 +71,7 @@ pip install black flake8 mypy pytest
 
 #### Adding a New UI Screen
 
-1. Create a new QWidget class (can be in `main.py` or separate file like `dashboard_screen.py`)
+1. Create a new QWidget class (can be in `main.py` or in a separate file such as `dashboard_screen.py` or `missions_reputation_screen.py`)
 2. Add it to the stacked widget:
    ```python
    self.stacked_widget.addWidget(your_new_screen)

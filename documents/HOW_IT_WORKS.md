@@ -1,7 +1,7 @@
 # How EDLA Works
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-22  
+**Last Updated:** 2025-02-04  
 **License:** GPL-3.0
 
 ## Overview
@@ -54,13 +54,14 @@ Journal File → LogMonitor → EventTracker → ProfileManager → UI Update
 4. **SessionManager** (`session_manager.py`)
    - Identifies game sessions (from LoadGame events)
    - Tracks detailed session statistics
-   - Stores session data in `%USERPROFILE%\.edla\sessions.json`
+   - Stores session data and processed-file list in SQLite: `%USERPROFILE%\.edla\edla.db`
+   - Migrates from legacy `sessions.json` / `processed_files.json` on first run if present
    - Processes historical log files on startup
 
 5. **CurrentSessionTracker** (`current_session_tracker.py`)
    - Tracks the currently active game session
-   - Updates statistics in real-time
-   - Provides live data for the Current Session dashboard view
+   - Updates statistics in real-time (including missions and reputation from MissionAccepted, MissionCompleted, MissionFailed, MissionAbandoned, Reputation events)
+   - Provides live data for the Current Session dashboard view and the Missions & Reputation screen
 
 ### 3. Data Storage
 
@@ -68,19 +69,31 @@ Journal File → LogMonitor → EventTracker → ProfileManager → UI Update
 - Location: `%USERPROFILE%\.edla\profiles\{CommanderName}.json`
 - Contains: Statistics, preferences, recent events, last known state
 
-**Session Data:**
-- Location: `%USERPROFILE%\.edla\sessions.json`
-- Contains: All historical game sessions with detailed statistics
-
-**Processed Files Tracking:**
-- Location: `%USERPROFILE%\.edla\processed_files.json`
-- Prevents re-processing the same log files multiple times
+**Session Data and Processed-File Tracking:**
+- Location: `%USERPROFILE%\.edla\edla.db` (SQLite database)
+- Contains: All historical game sessions and the list of processed log files
+- Uses Python’s built-in SQLite support; no separate database install
+- If old `sessions.json` or `processed_files.json` exist, they are imported once and renamed to `.json.migrated`
 
 **Application Logs:**
 - Location: `logs/app.log` (in application directory)
 - Contains: Application events, errors, debugging information
 
 ## User Interface Components
+
+### Home Screen
+
+**Purpose:** Start page, commander selection, and commander startup snapshot (ranks, progress, powerplay, reputation)
+
+**How it works:**
+- Default view when the application starts
+- Shows “Select a commander first” when no commander is selected
+- When a commander is selected: welcome plus snapshot (last session start, ranks with in-game names, progress %, powerplay, superpower reputation); data from journal startup reader and live Rank/Progress events; Home tab refreshes from tracker so new journal data appears without re-selecting commander
+- Commander can be switched via the dropdown and refresh in the top navigation bar
+
+**Expected Results:**
+- App opens on Home; user can select a commander from the nav bar
+- After selecting a commander, log revalidation runs in the background; status bar shows “Revalidating logs…” then “Logs revalidated.”
 
 ### Monitor Screen
 
@@ -89,13 +102,14 @@ Journal File → LogMonitor → EventTracker → ProfileManager → UI Update
 **How it works:**
 - Displays recent events from the selected commander
 - Updates every second automatically
-- Shows event type and timestamp
+- Shows event type, timestamp, and a verbose one-line description (e.g. FSDJump with system and distance, Docked with station name)
+- List uses word wrap and tooltips; scrolls to top so newest events stay visible
 - Displays monitoring status and log directory path
 
 **Expected Results:**
 - When Elite Dangerous is running, events appear in real-time
-- Events are listed newest first
-- Shows up to 50 most recent events
+- Events are listed newest first (most recent at top)
+- Shows up to 100 most recent events
 - If no journal files exist, shows informational message
 - If no events yet, shows "No events yet" message
 
@@ -133,6 +147,7 @@ Journal File → LogMonitor → EventTracker → ProfileManager → UI Update
 - Shows live statistics while playing Elite Dangerous
 - Updates automatically as events occur
 - Displays: Credits, Money Earned/Spent, Light Years Traveled, Jumps, Systems/Stations/Planets Visited, Kills, Deaths, Combat stats
+- Active Missions and Reputation (faction reputation) from the current session
 - If no active session, shows "No active session" message
 
 **Historical View:**
@@ -141,6 +156,20 @@ Journal File → LogMonitor → EventTracker → ProfileManager → UI Update
 - Session list shows: Date, Commander, Jumps, Systems, Credits Change, Events
 - Double-clicking a session shows detailed breakdown
 - If no sessions exist, shows "No sessions found" message
+
+### Missions & Reputation Screen
+
+**Purpose:** Current-session missions and faction reputation
+
+**How it works:**
+- Dedicated view for active missions, completed/failed this session, and faction reputation
+- Data comes from the current session tracker (MissionAccepted, MissionCompleted, MissionFailed, MissionAbandoned, Reputation events)
+- Updates in real time as events are processed
+
+**Expected Results:**
+- Active missions list shows name, faction, destination
+- Completed and failed/abandoned sections show missions from the current session only
+- Reputation reflects current faction standings (from the journal `Reputation` event; the game sends this when you dock or at certain events, so the pane may be empty until then)
 
 ## Expected Workflow
 
@@ -228,12 +257,12 @@ Journal File → LogMonitor → EventTracker → ProfileManager → UI Update
 
 **How it works:**
 - File system monitoring detects changes immediately
-- UI updates every second via QTimer
-- Statistics recalculated on each update
+- UI updates every 2 seconds via QTimer (reduces CPU and keeps the app responsive)
+- Missions & Reputation screen only rebuilds when its data actually changes
 - No manual refresh needed
 
 **Expected Results:**
-- Events appear within 1-2 seconds of occurring
+- Events appear within 1–2 seconds of occurring
 - Dashboard statistics update automatically
 - Current session stats reflect live gameplay
 - Smooth, responsive user experience
@@ -316,6 +345,13 @@ Journal File → LogMonitor → EventTracker → ProfileManager → UI Update
 3. Correct commander selected (if filtering)
 4. Refresh sessions button clicked
 
+### Reputation Pane Empty
+
+**Check:**
+1. Commander is selected and you have an active session (game has been run this session).
+2. The game sends a `Reputation` event when you dock or at certain other times; the pane only shows data after such an event.
+3. If you have just started the app, dock in-game once and the reputation data should appear on the next refresh (within a few seconds).
+
 ## Technical Details
 
 ### Threading
@@ -326,9 +362,9 @@ Journal File → LogMonitor → EventTracker → ProfileManager → UI Update
 
 ### Data Persistence
 
-- JSON format for all stored data
-- Atomic writes (write to temp file, then rename)
-- Error recovery (graceful handling of corrupted data)
+- **Profiles:** JSON files in `%USERPROFILE%\.edla\profiles\`; atomic writes (write to temp file, then rename)
+- **Sessions and processed files:** SQLite database (`edla.db`); no large JSON files
+- **Error recovery:** Corrupted profile or legacy JSON is handled gracefully (exceptions caught, optional backup); app does not crash on invalid JSON
 
 ### File Monitoring
 

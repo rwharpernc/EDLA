@@ -1,7 +1,7 @@
 # Changelog
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-22  
+**Last Updated:** 2025-02-04  
 **License:** GPL-3.0
 
 All notable changes to this project will be documented in this file.
@@ -9,9 +9,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - Alpha 1.0
+## [Unreleased]
+
+- Next version starts next session.
+
+## [Alpha 1.03] - 2025-02-04
 
 ### Added
+- **Home page** – App starts on a Home screen with “Select a commander first”; welcome message when a commander is selected.
+- **Commander switching bar** – Nav bar combo box to switch commanders; refresh button to rescan from journals.
+- **Log revalidation on commander selection** – When a commander is selected, all logs are revalidated in the background; status bar shows “Revalidating logs…” then “Logs revalidated.”
+- **Verbose log view** – Monitor events show detailed one-line descriptions (FSDJump, Docked, missions, Powerplay, Rank, Progress, etc.). Newest first; generic fallback shows all fields for unknown events.
+- **Journal reference docs** – EliteJournalReader and ODEliteTracker referenced in `documents/JOURNAL_READER_REFERENCE.md` for porting ideas.
+- **Auxiliary JSON reader** (`journal_aux_reader.py`) – Reads Cargo.json, NavRoute.json, Market.json from the journal directory.
+- **Mission and reputation tracking** – Current session tracker records active missions, completed/failed this session, and faction reputation from journal events.
+- **Missions & Reputation view** – New “Missions” tab with full-page view of active missions, completed/failed this session, and reputation; updates live.
+- **Full window resizing** – Window is resizable (min 500×400); content area uses stretch so panels resize with the window.
+- **Auto-scrolling** – Monitor, Profiles, Dashboard, and Missions views use scroll areas so content scrolls when the view is smaller than the content.
+- **Rank names (in-game)** – All rank categories use correct Elite Dangerous titles: Combat (Harmless→Elite), Trade (Penniless→Elite), Exploration (Aimless→Elite), CQC (Helpless→Elite), Mercenary (Odyssey), Exobiologist (Odyssey), Federation Navy, Empire Navy; Alliance noted as reputation only.
+- **Odyssey ranks** – Mercenary and Exobiologist ranks supported in startup snapshot, tracker, and Home/Monitor display.
+
+### Changed
+- **Session and processed-file storage** – Switched from JSON files to SQLite (`edla.db`); migration from legacy JSON on first run.
+- **Defensive JSON handling** – Profile and session load paths catch invalid JSON so the app does not crash on corrupted files.
+- **UI update interval** – Refresh timer 3s; only visible tab updated; missions/reputation rebuild only when data changes.
+- **Reputation parsing** – Support for flat key-value and `Factions` array; text levels (Friendly, Allied) mapped to 0–100.
+- **Documentation** – All docs updated for Alpha 1.03 (2025-02-04).
+
+### Fixed
+- **Large JSON crash** – Corrupted or oversized `sessions.json` / profile JSON no longer crashes the app; errors are handled and optional backup is made.
+- **Reputation pane** – Robust parsing of Reputation event so data populates when the game sends it.
+- **Graceful exit** – Close button and File→Exit stop timers, revalidation thread, and log monitor cleanly.
+
+---
+
+## [Alpha 1.0] - 2025-12-22
+
+### Added
+- **SQLite session storage** - Session and processed-file data now use SQLite
+  - Database file: `%USERPROFILE%\.edla\edla.db`
+  - No large JSON files; better performance and reliability at scale
+  - Automatic migration: existing `sessions.json` and `processed_files.json` are imported on first run and renamed to `.json.migrated`
+  - Uses Python standard library (`sqlite3`) — no new dependencies
 - **Enhanced Session Dashboard** - Comprehensive dashboard with dual view modes
   - **Current Session View** - Real-time statistics for active game session
     - Live tracking of credits, money earned/spent, light years traveled
@@ -80,6 +119,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated README.md with "How It Works" section and data flow diagram
 
 ### Changed
+- **Session and processed-file storage** - Switched from JSON files to SQLite
+  - `sessions.json` and `processed_files.json` replaced by `edla.db`
+  - Setup and run batch files updated to mention SQLite storage
+  - All documentation updated (README, ARCHITECTURE, HOW_IT_WORKS, USER_GUIDE, DEVELOPER_GUIDE, BUILD_GUIDE)
 - **Log File Location** - Application logs now stored in application directory
   - Changed from `%USERPROFILE%\.edla\logs\app.log` to `logs/app.log` (relative to app)
   - Keeps logs with application for easier access and management

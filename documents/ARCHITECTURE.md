@@ -1,7 +1,7 @@
 # Architecture Documentation
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-22  
+**Last Updated:** 2025-02-04  
 **License:** GPL-3.0
 
 ## Overview
@@ -12,17 +12,22 @@ The Elite Dangerous Log Analyzer (EDLA) is a Python-based GUI application built 
 
 ```
 EDLA/
-├── main.py                 # Main application entry point and GUI
-├── config.py               # Configuration and path management
-├── profile_manager.py      # Commander profile management
-├── log_monitor.py          # Real-time log file monitoring
-├── event_tracker.py        # Event tracking and statistics
-├── commander_detector.py   # Commander detection from journals
-├── session_manager.py      # Session tracking and analysis
-├── dashboard_screen.py     # Dashboard UI component
-├── requirements.txt        # Python dependencies
-├── documents/              # Documentation folder
-└── README.md              # Main documentation
+├── main.py                     # Main application entry point and GUI
+├── config.py                   # Configuration and path management
+├── profile_manager.py          # Commander profile management
+├── log_monitor.py              # Real-time log file monitoring
+├── event_tracker.py            # Event tracking and statistics
+├── commander_detector.py       # Commander detection from journals
+├── session_manager.py          # Session tracking and analysis (SQLite)
+├── dashboard_screen.py         # Dashboard UI component
+├── missions_reputation_screen.py  # Missions & Reputation view
+├── journal_aux_reader.py       # Cargo/NavRoute/Market JSON reader
+├── journal_startup_reader.py    # Startup snapshot (LoadGame, Rank, Progress, Powerplay, Reputation) from latest journal
+├── current_session_tracker.py   # Real-time session and mission/reputation tracking
+├── no_journal_widget.py        # No-journal-files informational widget
+├── requirements.txt            # Python dependencies
+├── documents/                  # Documentation folder
+└── README.md                   # Main documentation
 ```
 
 ## Core Components
@@ -35,6 +40,9 @@ EDLA/
   - Coordinates between components
   - Provides Help menu with About and License dialogs
   - Manages navigation button active states
+  - Resizable window with scrollable content panels
+
+- **HomeScreen**: Start view; when a commander is selected, shows welcome and startup snapshot (ranks with in-game names, progress %, powerplay, superpower reputation, last session start). Refreshes from tracker when Home tab is visible so new journal data appears.
 
 - **MonitorScreen**: Main monitoring view
   - Displays real-time events
@@ -52,6 +60,11 @@ EDLA/
   - Provides session details dialog
   - Filters sessions by commander
   - Manual refresh capability
+
+- **MissionsReputationScreen** (`missions_reputation_screen.py`): Missions and reputation view
+  - Superpower Reputation Checkpoint Progress (fixed pane at top; data from Reputation event)
+  - Completed missions ready to turn in, completed/failed this session
+  - Refreshes only when data changes to keep the app responsive
 
 ### Configuration (`config.py`)
 
@@ -106,7 +119,8 @@ EDLA/
   - Identifies sessions from journal files (each log file = one session)
   - Extracts session metadata (start/end times, commander, jumps, dockings, events)
   - Tracks processed files to prevent duplicate processing
-  - Stores session data in JSON format
+  - **Stores session data and processed-file list in SQLite** (`%USERPROFILE%\.edla\edla.db`)
+  - Automatically migrates from legacy `sessions.json` / `processed_files.json` on first run
   - Provides session statistics and filtering
   - Handles both initial scan and incremental updates
 
@@ -153,7 +167,8 @@ EDLA/
 - **Python 3.8+**: Core language
 - **PyQt6**: GUI framework
 - **watchdog**: File system monitoring
-- **JSON**: Data persistence format
+- **SQLite** (stdlib): Session and processed-file persistence (`edla.db`)
+- **JSON**: Commander profile files in `profiles/`; journal events are line-delimited JSON
 
 ## Design Patterns
 
@@ -165,7 +180,6 @@ EDLA/
 ## Future Architecture Considerations
 
 - Plugin system for custom event handlers
-- Database backend option (SQLite)
 - API layer for external integrations
 - Service layer for business logic separation
 

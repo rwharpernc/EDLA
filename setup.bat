@@ -40,6 +40,11 @@ if errorlevel 1 (
 echo.
 echo Setup complete!
 echo.
+echo Data storage:
+echo   - Session and processed-file data use SQLite (Python standard library).
+echo   - Database file: %%USERPROFILE%%\.edla\edla.db
+echo   - Commander profiles remain in %%USERPROFILE%%\.edla\profiles\ (JSON).
+echo.
 echo To run the application:
 echo   1. Activate the virtual environment: venv\Scripts\activate.bat
 echo   2. Run: python main.py

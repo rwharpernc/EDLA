@@ -1,55 +1,87 @@
 """
 Current Session Tracker for real-time session statistics
 """
-from typing import Dict, Optional, Set
+from typing import Dict, List, Optional, Set
 from datetime import datetime
 from pathlib import Path
 
 
+def _reputation_text_to_value(text: str) -> Optional[float]:
+    """Map Elite Dangerous reputation text to 0-100 scale if known."""
+    if not text:
+        return None
+    t = text.strip().lower()
+    # Common journal/UI strings (order: worst to best)
+    map_ = {
+        "hostile": 0, "unfriendly": 25, "neutral": 50,
+        "cordial": 60, "friendly": 75, "allied": 100,
+    }
+    return map_.get(t)
+
+
+def _empty_startup_snapshot() -> Dict[str, Dict]:
+    return {
+        "load_game": {},
+        "ranks": {},
+        "progress": {},
+        "powerplay": {},
+        "reputation": {},
+    }
+
+
 class CurrentSessionTracker:
     """Tracks statistics for the current active session in real-time"""
-    
+
     def __init__(self):
         self.reset()
-    
+
     def reset(self):
         """Reset session statistics (called when new session starts)"""
         self.start_time: Optional[str] = None
         self.commander: Optional[str] = None
         self.current_log_file: Optional[str] = None
-        
+
         # Credits
         self.start_credits: Optional[int] = None
         self.current_credits: Optional[int] = None
         self.money_earned: int = 0
         self.money_spent: int = 0
-        
+
         # Travel
         self.light_years_traveled: float = 0.0
         self.jumps: int = 0
         self.systems_visited: Set[str] = set()
         self.stations_visited: Set[str] = set()
         self.planets_landed: int = 0
-        
+
         # Combat
         self.kills: int = 0
         self.deaths: int = 0
         self.bounties_earned: int = 0
         self.combat_bonds: int = 0
-        
+
         # Exploration
         self.scans: int = 0
         self.fss_scans: int = 0
         self.dss_scans: int = 0
         self.exploration_value: int = 0
-        
+
         # Trading
         self.trade_profit: int = 0
-        
-        # Missions
+
+        # Missions (counts)
         self.missions_completed: int = 0
         self.mission_rewards: int = 0
-        
+        # Active missions (from MissionAccepted; removed on Completed/Failed/Abandoned)
+        self.active_missions: List[Dict] = []
+        # This session: completed/failed mission summaries
+        self.completed_missions: List[Dict] = []
+        self.failed_missions: List[Dict] = []
+
+        # Reputation: faction name -> value (journal uses 0-100 or 0.0-1.0)
+        self.reputation: Dict[str, float] = {}
+        self.startup_snapshot = _empty_startup_snapshot()
+
         # Ships
         self.first_ship: Optional[str] = None
         self.current_ship: Optional[str] = None
@@ -162,12 +194,139 @@ class CurrentSessionTracker:
                 self.trade_profit += profit
         
         # Mission events
+        elif event_type == "MissionAccepted":
+            mission_id = raw_data.get("MissionID")
+            name = raw_data.get("Name", "")
+            faction = raw_data.get("Faction", "")
+            expiry = raw_data.get("Expiry", "")
+            dest_system = raw_data.get("DestinationSystem", "")
+            dest_station = raw_data.get("DestinationStation", "")
+            m = {
+                "MissionID": mission_id,
+                "Name": name,
+                "Faction": faction,
+                "Expiry": expiry,
+                "DestinationSystem": dest_system,
+                "DestinationStation": dest_station,
+            }
+            if mission_id is not None:
+                self.active_missions = [x for x in self.active_missions if x.get("MissionID") != mission_id]
+            self.active_missions.append(m)
+
         elif event_type == "MissionCompleted":
             self.missions_completed += 1
             reward = raw_data.get("Reward", 0)
             if reward:
                 self.mission_rewards += reward
-        
+            mission_id = raw_data.get("MissionID")
+            name = raw_data.get("Name", "")
+            faction = raw_data.get("Faction", "")
+            self.active_missions = [x for x in self.active_missions if x.get("MissionID") != mission_id]
+
+            # Parse FactionEffects (reputation/influence per faction)
+            faction_effects = []
+            for fe in raw_data.get("FactionEffects") or []:
+                if not isinstance(fe, dict):
+                    continue
+                fname = fe.get("Faction", "")
+                rep_trend = fe.get("ReputationTrend", "")
+                rep = fe.get("Reputation", "")
+                inf_list = fe.get("Influence") or []
+                inf_parts = []
+                for inf in inf_list:
+                    if isinstance(inf, dict):
+                        trend = inf.get("Trend", "")
+                        inv = inf.get("Influence", "")
+                        if inv or trend:
+                            inf_parts.append(f"{inv} {trend}".strip() or trend)
+                faction_effects.append({
+                    "Faction": fname,
+                    "ReputationTrend": rep_trend,
+                    "Reputation": rep,
+                    "Influence": inf_parts,
+                })
+
+            # Parse MaterialsReward
+            materials_reward = []
+            for mat in raw_data.get("MaterialsReward") or []:
+                if not isinstance(mat, dict):
+                    continue
+                mat_name = mat.get("Name_Localised") or mat.get("Name", "")
+                mat_cat = mat.get("Category_Localised") or mat.get("Category", "")
+                count = mat.get("Count", 0)
+                materials_reward.append({"Name": mat_name, "Category": mat_cat, "Count": count})
+
+            self.completed_missions.append({
+                "Name": name,
+                "Faction": faction,
+                "Reward": reward,
+                "FactionEffects": faction_effects,
+                "MaterialsReward": materials_reward,
+            })
+
+        elif event_type == "MissionFailed":
+            mission_id = raw_data.get("MissionID")
+            name = raw_data.get("Name", "")
+            faction = raw_data.get("Faction", "")
+            self.active_missions = [x for x in self.active_missions if x.get("MissionID") != mission_id]
+            self.failed_missions.append({"Name": name, "Faction": faction})
+
+        elif event_type == "MissionAbandoned":
+            mission_id = raw_data.get("MissionID")
+            self.active_missions = [x for x in self.active_missions if x.get("MissionID") != mission_id]
+
+        elif event_type == "Rank":
+            for k in ("Combat", "Trade", "Explore", "Empire", "Federation", "CQC", "Mercenary", "Exobiologist"):
+                v = raw_data.get(k)
+                if v is not None:
+                    self.startup_snapshot["ranks"][k] = v
+        elif event_type == "Progress":
+            for k in ("Combat", "Trade", "Explore", "Empire", "Federation", "CQC", "Mercenary", "Exobiologist"):
+                v = raw_data.get(k)
+                if v is not None:
+                    self.startup_snapshot["progress"][k] = v
+        elif event_type == "Powerplay":
+            self.startup_snapshot["powerplay"] = {
+                "Power": raw_data.get("Power"),
+                "Rank": raw_data.get("Rank"),
+                "Merits": raw_data.get("Merits"),
+                "Votes": raw_data.get("Votes"),
+                "TimePledged": raw_data.get("TimePledged"),
+            }
+
+        # Reputation event (current standings with factions)
+        # Journal can send: (1) flat keys with numeric values 0-100 or 0.0-1.0, or
+        # (2) a "Factions" array of {"Name": "...", "Reputation": number or "Friendly"/"Allied" etc.}
+        elif event_type == "Reputation":
+            factions = raw_data.get("Factions")
+            if isinstance(factions, list):
+                for entry in factions:
+                    if not isinstance(entry, dict):
+                        continue
+                    name = entry.get("Name")
+                    rep = entry.get("Reputation")
+                    if name is None:
+                        continue
+                    if isinstance(rep, (int, float)):
+                        self.reputation[name] = float(rep)
+                    elif isinstance(rep, str):
+                        v = _reputation_text_to_value(rep)
+                        if v is not None:
+                            self.reputation[name] = v
+            else:
+                for key, value in raw_data.items():
+                    if key in ("event", "timestamp", "Factions"):
+                        continue
+                    try:
+                        if isinstance(value, (int, float)):
+                            self.reputation[key] = float(value)
+                        elif isinstance(value, str):
+                            v = _reputation_text_to_value(value)
+                            if v is not None:
+                                self.reputation[key] = v
+                    except (TypeError, ValueError):
+                        pass
+
         # Ship changes
         if "Ship" in raw_data:
             self.current_ship = raw_data.get("Ship", self.current_ship)
@@ -214,11 +373,30 @@ class CurrentSessionTracker:
             },
             "missions": {
                 "completed": self.missions_completed,
-                "rewards": self.mission_rewards
-            }
+                "rewards": self.mission_rewards,
+                "active": list(self.active_missions),
+                "completed_list": list(self.completed_missions),
+                "failed_list": list(self.failed_missions),
+            },
+            "reputation": dict(self.reputation),
+            "startup_snapshot": {
+                "load_game": dict(self.startup_snapshot.get("load_game", {})),
+                "ranks": dict(self.startup_snapshot.get("ranks", {})),
+                "progress": dict(self.startup_snapshot.get("progress", {})),
+                "powerplay": dict(self.startup_snapshot.get("powerplay", {})),
+                "reputation": dict(self.startup_snapshot.get("reputation", {})),
+            },
         }
     
     def has_active_session(self) -> bool:
         """Check if there's an active session"""
         return self.commander is not None
+
+    def set_startup_snapshot(self, snapshot: Dict) -> None:
+        """Set startup snapshot from journal file (e.g. after commander select / revalidation)."""
+        if not snapshot:
+            return
+        for key in ("load_game", "ranks", "progress", "powerplay", "reputation"):
+            if key in snapshot and isinstance(snapshot[key], dict):
+                self.startup_snapshot[key] = dict(snapshot[key])
 

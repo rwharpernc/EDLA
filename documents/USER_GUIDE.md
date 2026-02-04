@@ -1,7 +1,7 @@
 # User Guide
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-12-22  
+**Last Updated:** 2025-02-04  
 **License:** GPL-3.0
 
 ## Prerequisites
@@ -44,25 +44,41 @@ Before using EDLA, ensure you have:
 #### Navigation Bar
 
 The top navigation bar provides:
-- **Select Commander Button**: Choose which commander to monitor (highlighted with white border)
+- **Commander**: Dropdown to select the active commander; use the refresh button (🔄) to rescan from journal files
+- **Home Button**: Start page; when a commander is selected, shows welcome and startup snapshot (ranks, progress, powerplay, reputation). Refreshes when the Home tab is visible so new journal data appears.
 - **Monitor Button**: Switch to the monitoring screen (highlighted when active)
 - **Profiles Button**: Switch to the profiles management screen (highlighted when active)
 - **Dashboard Button**: Switch to the session dashboard screen (highlighted when active)
+- **Missions Button**: Switch to the Missions & Reputation view (active missions, completed/failed this session, reputation)
 - **Help Menu**: Access About and License information
+
+The window is resizable; panels scroll automatically when content does not fit.
+
+#### Home Screen (startup snapshot)
+
+When a commander is selected, the Home screen shows:
+
+- **Last session start**: Ship, credits, star system, and game mode from the latest journal (LoadGame).
+- **Ranks**: Combat, Trade, Exploration, CQC, Mercenary (Odyssey), Exobiologist (Odyssey), Federation Navy, Empire Navy — using in-game rank names (e.g. Baron, Pathfinder, Entrepreneur). Alliance is noted as reputation only.
+- **Progress to next rank**: Percentage progress for each rank category.
+- **Powerplay**: Power name, rank, merits, votes, time pledged (if pledged).
+- **Superpower reputation**: Empire, Federation, Independent, Alliance (at session start).
+
+Data is read from the latest journal file when you select a commander and is also updated live when new events (e.g. Rank, Progress) are written to the journal while the Home tab is visible. If no startup data is available yet, play and load into the game once, then select the commander again.
 
 #### Monitor Screen
 
 The Monitor screen is your main view for watching game events:
 
-- **Commander Selection**: Click "Select Commander" to choose which commander to monitor
+- **Commander Selection**: Use the Commander dropdown in the nav bar to choose which commander to monitor
 - **Status Display**: Shows whether monitoring is active (should show "✓ Monitoring" when working)
 - **Log Directory**: Displays where journal files are being read from
-- **Recent Events**: Live list of events from Elite Dangerous (updates every second)
+- **Recent Events**: Live list of events from Elite Dangerous (updates every second), with verbose one-line descriptions (e.g. jump details, station names, mission rewards)
 
 **Expected Behavior:**
 - Events appear within 1-2 seconds of occurring in Elite Dangerous
 - Events are listed newest first (most recent at top)
-- Shows up to 50 most recent events
+- Shows up to 100 most recent events
 - Updates automatically - no refresh needed
 - If no journal files exist, shows informational message instead of event list
 - If no events yet, shows "No events yet" message in gray text
@@ -74,6 +90,16 @@ The Profiles screen manages your commanders:
 - **Existing Profiles**: List of all detected commanders
 - **Refresh Button**: Rescans journal files to find new commanders
 - **Manual Add**: Create a profile manually if needed
+
+#### Missions & Reputation Screen
+
+The Missions tab shows (for the current session):
+- **Superpower Reputation Checkpoint Progress**: Faction reputation in a two-column table (Faction | Reputation). Data appears when the game sends a Reputation event (e.g. when you dock).
+- **Completed Missions, Ready to Turn In**: Missions you have accepted, most recent first (name, faction, destination)
+- **Completed This Session**: Missions completed this session with rewards
+- **Failed / Abandoned This Session**: Missions failed or abandoned
+
+If the reputation pane is empty, dock in-game once; the game sends reputation data at that time and it will show within a few seconds.
 
 #### Dashboard Screen
 
@@ -112,9 +138,9 @@ Access application information:
 
 #### Selecting a Commander
 
-1. Click "Select Commander" in the top navigation bar
+1. Use the Commander selection dropdown in the top navigation bar (or open it from the Home screen)
 2. Choose your commander from the dropdown menu
-3. Events will now be tracked for that commander
+3. Events will now be tracked for that commander; the status bar will briefly show "Revalidating logs…" then "Logs revalidated."
 
 #### Refreshing Commander List
 
@@ -175,15 +201,11 @@ Profiles are stored in:
 
 Each commander has a JSON file named `{CommanderName}.json`
 
-Session data is stored in:
+Session data and processed-file tracking are stored in a SQLite database:
 ```
-%USERPROFILE%\.edla\sessions.json
+%USERPROFILE%\.edla\edla.db
 ```
-
-Processed file tracking is stored in:
-```
-%USERPROFILE%\.edla\processed_files.json
-```
+No separate database install is required (SQLite is built into Python). If you had older `sessions.json` or `processed_files.json` files, they are imported once on first run and renamed to `.json.migrated`.
 
 ### Profile Contents
 
@@ -202,9 +224,8 @@ To backup your profiles and session data:
 3. Restore by copying it back
 
 This includes:
-- All commander profiles
-- Session history data
-- Processed file tracking
+- All commander profiles (JSON files in `profiles\`)
+- Session database (`edla.db`) — session history and processed-file tracking
 - Application logs
 
 ## Troubleshooting
