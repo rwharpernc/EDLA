@@ -1,8 +1,22 @@
 """
 Elite Dangerous Log Analyzer - Main Application
 """
-import json
 import sys
+from pathlib import Path
+from PyQt6.QtWidgets import QApplication
+
+# Bootstrap: ensure edla_config.json exists before importing config
+def _get_base_dir():
+    return Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).parent
+
+app = QApplication(sys.argv)
+_base_dir = _get_base_dir()
+if not (_base_dir / "edla_config.json").exists():
+    from config_setup import run_setup
+    if not run_setup(_base_dir):
+        sys.exit(0)
+
+import json
 from typing import Dict, Optional
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -1592,8 +1606,8 @@ def main():
         logger.info("="*80)
         logger.info(f"Starting {APP_NAME} v{APP_VERSION}")
         logger.info("="*80)
-        
-        app = QApplication(sys.argv)
+
+        app = QApplication.instance() or QApplication(sys.argv)
         app.setStyle('Fusion')  # Use Fusion style for better cross-platform look
         app.setQuitOnLastWindowClosed(True)  # Exit when main window is closed
 

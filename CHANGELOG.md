@@ -1,7 +1,7 @@
 # Changelog
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0
 
 All notable changes to this project will be documented in this file.
@@ -12,6 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Next version starts next session.
+
+## [Alpha 1.03] - 2026-02-12 (config sanitization)
+
+**Note:** This version has not been fully tested (as of 2026-02-12).
+
+### Added
+- **External configuration** – Paths and API keys are no longer embedded in code. Optional `edla_config.json` in the application directory overrides log directory, app data directory, and optional `api_key`. See `edla_config.sample.json` and [documents/CONFIG.md](documents/CONFIG.md).
+- **Sample config** – `edla_config.sample.json` for users to copy to `edla_config.json` and customize. `edla_config.json` is listed in `.gitignore` and must not be committed.
+- **CONFIG.md** – Documentation for external config setup and options.
+
+### Changed
+- **config.py** – Loads defaults from code; overrides from `edla_config.json` when present. Added `get_optional_config_key()` for optional keys (e.g. API key).
+- **Documentation** – README, User Guide, How It Works, Developer Guide, Architecture, and Build Guide updated for external config and untested-version note (2026-02-12).
+
+---
 
 ## [Alpha 1.03] - 2025-02-04
 

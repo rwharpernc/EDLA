@@ -1,8 +1,10 @@
 # Developer Guide
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0
+
+**Note (2026-02-12):** This version has not been fully tested.
 
 ## Prerequisites
 
@@ -43,7 +45,7 @@ pip install black flake8 mypy pytest
 ### Module Responsibilities
 
 - **main.py**: GUI application, UI components (Home, Monitor, Profiles, Dashboard, Missions), event handling, commander bar, log revalidation
-- **config.py**: Configuration constants and path management
+- **config.py**: Configuration and path management; loads optional `edla_config.json` from the application directory (paths, optional API keys). Do not commit `edla_config.json`; use `edla_config.sample.json` as a template. See [CONFIG.md](CONFIG.md).
 - **profile_manager.py**: Profile CRUD operations and persistence (JSON)
 - **log_monitor.py**: File system monitoring and log parsing
 - **event_tracker.py**: Event processing and statistics

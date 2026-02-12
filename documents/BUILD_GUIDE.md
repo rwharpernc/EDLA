@@ -1,8 +1,10 @@
 # Build Guide
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0
+
+**Note (2026-02-12):** This version has not been fully tested.
 
 This guide explains how to build EDLA as a Windows executable and create an installer.
 
@@ -162,7 +164,7 @@ The icon will automatically be used in:
 ### Executable Doesn't Run
 
 - **Missing DLLs**: PyInstaller should bundle everything, but check PyQt6 installation
-- **Path issues**: Verify paths in config.py work for frozen executables
+- **Path issues**: Verify paths work for frozen executables. Use `edla_config.json` (copy from `edla_config.sample.json`) next to the executable to override log or app-data paths; do not commit `edla_config.json`. See [CONFIG.md](CONFIG.md).
 - **Logging errors**: Check that LOGS_DIR is writable
 
 ### Installer Issues

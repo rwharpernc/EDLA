@@ -1,7 +1,7 @@
 # Elite Dangerous Journal Format
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0
 
 ## Overview
@@ -11,6 +11,8 @@ Elite Dangerous creates journal files in JSON format, with one event per line. T
 ```
 %USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\
 ```
+
+In EDLA, this path can be overridden via the external config file; see [CONFIG.md](CONFIG.md).
 
 ## File Naming Convention
 

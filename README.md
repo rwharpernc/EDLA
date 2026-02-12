@@ -1,11 +1,13 @@
 # Elite Dangerous Log Analyzer (EDLA)
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0  
 **Version:** Alpha 1.03
 
 > **⚠️ WARNING: This is an early prototype and is NOT for public use or testing. The project is in active development and many features are incomplete or not yet implemented.**
+
+> **Note (2026-02-12):** This version has not been fully tested. Use at your own risk.
 
 > **Note:** EDLA is a temporary project name and may change as the project evolves.
 
@@ -16,6 +18,7 @@ A Python GUI application (early prototype) for monitoring and analyzing Elite Da
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Configuration](#configuration)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
 - [Documentation](#documentation)
@@ -116,6 +119,15 @@ If you're running from source code (not using a pre-built executable):
    ```
 
 **Note:** Using a virtual environment is recommended to avoid conflicts with other Python projects.
+
+## Configuration
+
+EDLA does **not** embed local paths or API keys in the repository. Use an external config file for machine-specific or sensitive settings.
+
+- **Interactive setup:** If `edla_config.json` does not exist, EDLA shows a setup dialog on startup so you can enter the log directory, app data directory, and optional API key (or use defaults). It then creates `edla_config.json` and continues.
+- **Manual setup:** Copy `edla_config.sample.json` to `edla_config.json` next to the application and edit it. Leave a value empty (`""`) to use the default.
+
+Do **not** commit `edla_config.json` — it is in `.gitignore`. The repo is kept clean for distribution: config, user data (`.edla/`), logs, and build artifacts are all ignored. See [documents/CONFIG.md](documents/CONFIG.md) for the full list.
 
 ## Quick Start (For Developers Only)
 
@@ -224,6 +236,7 @@ Comprehensive documentation is available in the `documents/` folder:
 
 - **[User Guide](documents/USER_GUIDE.md)** - Complete user documentation with troubleshooting
 - **[How It Works](documents/HOW_IT_WORKS.md)** - Detailed explanation of how the application works and expected results
+- **[Configuration](documents/CONFIG.md)** - External config file setup (paths, optional keys); do not commit `edla_config.json`
 - **[Developer Guide](documents/DEVELOPER_GUIDE.md)** - Information for developers and contributors
 - **[Build Guide](documents/BUILD_GUIDE.md)** - Instructions for building executables and installers
 - **[Architecture Documentation](documents/ARCHITECTURE.md)** - Project structure and design
@@ -240,7 +253,8 @@ Comprehensive documentation is available in the `documents/` folder:
 ```
 EDLA/
 ├── main.py                 # Main application entry point
-├── config.py               # Configuration and paths
+├── config.py               # Configuration and paths (loads optional edla_config.json)
+├── edla_config.sample.json # Sample config for users (copy to edla_config.json; do not commit edla_config.json)
 ├── profile_manager.py      # Profile management
 ├── log_monitor.py          # Log file monitoring
 ├── event_tracker.py        # Event tracking
@@ -344,4 +358,5 @@ See the [LICENSE](LICENSE) file for the full license text, or view it in the app
 
 **Author:** R.W. Harper  
 **Project Name:** EDLA (temporary - subject to change)  
-**Version:** Alpha 1.03
+**Version:** Alpha 1.03  
+**Note:** This version has not been fully tested (as of 2026-02-12).

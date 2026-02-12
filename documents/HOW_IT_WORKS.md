@@ -1,8 +1,10 @@
 # How EDLA Works
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0
+
+**Note (2026-02-12):** This version has not been fully tested.
 
 ## Overview
 
@@ -12,7 +14,7 @@ EDLA (Elite Dangerous Log Analyzer) is a desktop application that monitors, anal
 
 ### 1. Log File Monitoring
 
-**Location:** `%USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\`
+**Location:** By default `%USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\`. Can be overridden via `edla_config.json` (see [CONFIG.md](CONFIG.md)).
 
 **How it works:**
 - EDLA uses the `watchdog` library to monitor the Elite Dangerous log directory

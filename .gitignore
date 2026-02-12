@@ -16,11 +16,44 @@ __pycache__/
 *.swp
 *.swo
 
-# Application Data
+# =============================================================================
+# Local / generated data – keep repo clean for distribution (do not commit)
+# =============================================================================
+
+# User config (paths, API keys) – use edla_config.sample.json as template
+edla_config.json
+
+# User application data (profiles, session DB) – lives under user profile
 .edla/
 
-# Application Logs
-logs/*.log
+# All application logs (in-repo logs directory and fallback error log)
+logs/
+app_error.log
+*.log
+
+# Build artifacts (PyInstaller)
+build/
+dist/
+
+# =============================================================================
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store

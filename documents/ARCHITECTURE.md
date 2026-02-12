@@ -1,8 +1,10 @@
 # Architecture Documentation
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0
+
+**Note (2026-02-12):** This version has not been fully tested.
 
 ## Overview
 
@@ -68,7 +70,8 @@ EDLA/
 
 ### Configuration (`config.py`)
 
-- Defines default paths for:
+- Does not embed local paths or API keys. Optional external config: `edla_config.json` in the application directory (see `edla_config.sample.json` and [CONFIG.md](CONFIG.md)); do not commit `edla_config.json`.
+- Defines default paths when config is absent or keys are empty:
   - Elite Dangerous log directory
   - Application data directory
   - Profile storage location

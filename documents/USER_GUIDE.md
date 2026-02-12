@@ -1,8 +1,10 @@
 # User Guide
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0
+
+**Note (2026-02-12):** This version has not been fully tested.
 
 ## Prerequisites
 
@@ -11,8 +13,12 @@ Before using EDLA, ensure you have:
 1. **Windows 10/11** (64-bit)
 2. **Elite Dangerous installed** - The game must be installed and you must have played it at least once
    - Journal files are created when you play Elite Dangerous
-   - Location: `%USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\`
+   - Default location: `%USERPROFILE%\Saved Games\Frontier Developments\Elite Dangerous\` (can be overridden via config)
 3. **Python 3.8+** (only if running from source, not needed for executable version)
+
+### Optional: External configuration
+
+Paths and optional keys are not embedded in the app. To override the default log or app-data directory (or to add an API key), copy `edla_config.sample.json` to `edla_config.json` in the application folder and edit it. Do not commit `edla_config.json`. See [CONFIG.md](CONFIG.md) for details.
 
 ## Getting Started
 
