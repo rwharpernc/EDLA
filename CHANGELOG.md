@@ -13,18 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Next version starts next session.
 
-## [Alpha 1.03] - 2026-02-12 (config sanitization)
+## [Alpha 1.04] - 2026-02-12 (config sanitization, interactive setup, clean repo)
 
 **Note:** This version has not been fully tested (as of 2026-02-12).
 
 ### Added
 - **External configuration** – Paths and API keys are no longer embedded in code. Optional `edla_config.json` in the application directory overrides log directory, app data directory, and optional `api_key`. See `edla_config.sample.json` and [documents/CONFIG.md](documents/CONFIG.md).
+- **Interactive config setup** – If `edla_config.json` is missing, EDLA shows a setup dialog on startup to enter paths and optional API key (or use defaults); creates the config file and continues. Manual setup (copy sample, edit) still supported.
+- **config_setup.py** – Dialog for first-run configuration; `get_base_dir_for_setup()` and `run_setup(base_dir)` used by main.py bootstrap.
 - **Sample config** – `edla_config.sample.json` for users to copy to `edla_config.json` and customize. `edla_config.json` is listed in `.gitignore` and must not be committed.
-- **CONFIG.md** – Documentation for external config setup and options.
+- **CONFIG.md** – Documentation for external config (interactive and manual setup) and "Keeping the repo clean for distribution" (list of excluded paths).
 
 ### Changed
 - **config.py** – Loads defaults from code; overrides from `edla_config.json` when present. Added `get_optional_config_key()` for optional keys (e.g. API key).
-- **Documentation** – README, User Guide, How It Works, Developer Guide, Architecture, and Build Guide updated for external config and untested-version note (2026-02-12).
+- **main.py** – Bootstrap before importing config: if `edla_config.json` does not exist, run interactive setup; reuse single QApplication instance.
+- **.gitignore** – Repo kept clean for distribution: ignore entire `logs/` directory, `app_error.log`, `*.log`, `build/`, `dist/`; config and local data already ignored. Removed previously tracked `logs/` file from index.
+- **Documentation** – All docs updated for external config, interactive setup, clean repo, and untested-version note (2026-02-12): README, User Guide, How It Works, Developer Guide, Architecture, Build Guide, CONFIG.md, JOURNAL_FORMAT.md, JOURNAL_READER_REFERENCE.md, TODO.md, assets/README.md.
 
 ---
 

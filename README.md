@@ -3,7 +3,7 @@
 **Author:** R.W. Harper  
 **Last Updated:** 2026-02-12  
 **License:** GPL-3.0  
-**Version:** Alpha 1.03
+**Version:** Alpha 1.04
 
 > **⚠️ WARNING: This is an early prototype and is NOT for public use or testing. The project is in active development and many features are incomplete or not yet implemented.**
 
@@ -39,7 +39,7 @@ This is a very early prototype with basic functionality. The application current
 
 **Many planned features are not yet implemented.** See [TODO.md](TODO.md) for planned functionality.
 
-## Current Features (Alpha 1.03)
+## Current Features (Alpha 1.04)
 
 - **Basic UI Framework** - PyQt6-based dark-themed interface
 - **Commander Detection** - Automatically scans journal files for commanders
@@ -169,7 +169,7 @@ Journal File → LogMonitor → EventTracker → ProfileManager/SessionManager �
 
 See [documents/HOW_IT_WORKS.md](documents/HOW_IT_WORKS.md) for detailed technical documentation.
 
-## Current Functionality (Alpha 1.03)
+## Current Functionality (Alpha 1.04)
 
 ### Monitor Screen
 
@@ -252,30 +252,32 @@ Comprehensive documentation is available in the `documents/` folder:
 
 ```
 EDLA/
-├── main.py                 # Main application entry point
+├── main.py                 # Main application entry point (bootstrap: config setup if needed)
 ├── config.py               # Configuration and paths (loads optional edla_config.json)
-├── edla_config.sample.json # Sample config for users (copy to edla_config.json; do not commit edla_config.json)
+├── config_setup.py         # Interactive first-run config dialog when edla_config.json missing
+├── edla_config.sample.json # Sample config (copy to edla_config.json; do not commit edla_config.json)
 ├── profile_manager.py      # Profile management
 ├── log_monitor.py          # Log file monitoring
 ├── event_tracker.py        # Event tracking
-├── commander_detector.py  # Commander detection
-├── session_manager.py          # Session tracking and analysis (SQLite)
-├── dashboard_screen.py         # Dashboard UI component
+├── commander_detector.py   # Commander detection
+├── session_manager.py      # Session tracking and analysis (SQLite)
+├── dashboard_screen.py     # Dashboard UI component
 ├── missions_reputation_screen.py  # Missions & Reputation view
-├── journal_aux_reader.py       # Cargo/NavRoute/Market reader
-├── current_session_tracker.py  # Real-time session and mission/reputation
-├── requirements.txt            # Python dependencies
-├── documents/                  # Documentation folder
+├── journal_aux_reader.py   # Cargo/NavRoute/Market reader
+├── current_session_tracker.py     # Real-time session and mission/reputation
+├── requirements.txt        # Python dependencies
+├── documents/              # Documentation folder
 │   ├── USER_GUIDE.md
 │   ├── HOW_IT_WORKS.md
+│   ├── CONFIG.md           # Config setup and keeping repo clean for distribution
 │   ├── DEVELOPER_GUIDE.md
 │   ├── BUILD_GUIDE.md
 │   ├── ARCHITECTURE.md
 │   ├── JOURNAL_FORMAT.md
 │   └── JOURNAL_READER_REFERENCE.md
-├── CHANGELOG.md           # Version history
+├── CHANGELOG.md            # Version history
 ├── TODO.md                 # Project tasks
-└── README.md              # This file
+└── README.md               # This file
 ```
 
 ## Development Status
@@ -358,5 +360,5 @@ See the [LICENSE](LICENSE) file for the full license text, or view it in the app
 
 **Author:** R.W. Harper  
 **Project Name:** EDLA (temporary - subject to change)  
-**Version:** Alpha 1.03  
+**Version:** Alpha 1.04  
 **Note:** This version has not been fully tested (as of 2026-02-12).

@@ -14,21 +14,23 @@ The Elite Dangerous Log Analyzer (EDLA) is a Python-based GUI application built 
 
 ```
 EDLA/
-├── main.py                     # Main application entry point and GUI
-├── config.py                   # Configuration and path management
+├── main.py                     # Main entry point; bootstrap (config setup if no edla_config.json), then GUI
+├── config.py                   # Configuration and path management (loads edla_config.json when present)
+├── config_setup.py             # Interactive first-run config dialog (paths, optional API key)
+├── edla_config.sample.json     # Sample config; copy to edla_config.json (do not commit)
 ├── profile_manager.py          # Commander profile management
 ├── log_monitor.py              # Real-time log file monitoring
-├── event_tracker.py            # Event tracking and statistics
-├── commander_detector.py       # Commander detection from journals
+├── event_tracker.py             # Event tracking and statistics
+├── commander_detector.py        # Commander detection from journals
 ├── session_manager.py          # Session tracking and analysis (SQLite)
 ├── dashboard_screen.py         # Dashboard UI component
 ├── missions_reputation_screen.py  # Missions & Reputation view
 ├── journal_aux_reader.py       # Cargo/NavRoute/Market JSON reader
-├── journal_startup_reader.py    # Startup snapshot (LoadGame, Rank, Progress, Powerplay, Reputation) from latest journal
-├── current_session_tracker.py   # Real-time session and mission/reputation tracking
+├── journal_startup_reader.py   # Startup snapshot (LoadGame, Rank, Progress, Powerplay, Reputation) from latest journal
+├── current_session_tracker.py  # Real-time session and mission/reputation tracking
 ├── no_journal_widget.py        # No-journal-files informational widget
 ├── requirements.txt            # Python dependencies
-├── documents/                  # Documentation folder
+├── documents/                  # Documentation folder (includes CONFIG.md for setup and clean-repo list)
 └── README.md                   # Main documentation
 ```
 

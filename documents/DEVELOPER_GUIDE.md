@@ -44,7 +44,8 @@ pip install black flake8 mypy pytest
 
 ### Module Responsibilities
 
-- **main.py**: GUI application, UI components (Home, Monitor, Profiles, Dashboard, Missions), event handling, commander bar, log revalidation
+- **main.py**: GUI application, bootstrap (interactive config setup when `edla_config.json` missing), UI components (Home, Monitor, Profiles, Dashboard, Missions), event handling, commander bar, log revalidation
+- **config_setup.py**: First-run configuration dialog; run when no `edla_config.json` exists. Collects log dir, app data dir, optional API key; writes `edla_config.json`. See [CONFIG.md](CONFIG.md).
 - **config.py**: Configuration and path management; loads optional `edla_config.json` from the application directory (paths, optional API keys). Do not commit `edla_config.json`; use `edla_config.sample.json` as a template. See [CONFIG.md](CONFIG.md).
 - **profile_manager.py**: Profile CRUD operations and persistence (JSON)
 - **log_monitor.py**: File system monitoring and log parsing

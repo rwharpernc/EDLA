@@ -1,6 +1,8 @@
 # EDLA Configuration
 
-**Last Updated:** 2026-02-12
+**Author:** R.W. Harper  
+**Last Updated:** 2026-02-12  
+**License:** GPL-3.0
 
 EDLA does not embed local paths or API keys in code. Use an external config file for machine-specific or sensitive settings.
 

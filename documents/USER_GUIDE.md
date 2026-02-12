@@ -18,7 +18,7 @@ Before using EDLA, ensure you have:
 
 ### Optional: External configuration
 
-Paths and optional keys are not embedded in the app. To override the default log or app-data directory (or to add an API key), copy `edla_config.sample.json` to `edla_config.json` in the application folder and edit it. Do not commit `edla_config.json`. See [CONFIG.md](CONFIG.md) for details.
+Paths and optional keys are not embedded in the app. If **`edla_config.json`** does not exist, EDLA shows an **interactive setup dialog** on first run so you can enter the log directory, app data directory, and optional API key (or use defaults). You can instead create the file manually by copying `edla_config.sample.json` to `edla_config.json` and editing it. Do not commit `edla_config.json`. See [CONFIG.md](CONFIG.md) for both options and for keeping the repo clean (no local data or logs committed).
 
 ## Getting Started
 

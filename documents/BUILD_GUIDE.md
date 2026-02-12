@@ -189,6 +189,7 @@ Before distributing:
 - [ ] Logs write to correct location
 - [ ] Profiles save correctly
 - [ ] Session database (edla.db) is created and used in app data directory
+- [ ] Repo is clean for distribution: no `edla_config.json`, `.edla/`, `logs/`, `build/`, or `dist/` committed (see [CONFIG.md](CONFIG.md)).
 
 ## File Sizes
 

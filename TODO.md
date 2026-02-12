@@ -1,7 +1,7 @@
 # TODO
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04 (documentation and TODO review)  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0
 
 This file tracks planned features, improvements, and tasks for the Elite Dangerous Log Analyzer.

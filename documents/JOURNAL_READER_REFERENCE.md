@@ -1,7 +1,7 @@
 # EliteJournalReader Reference & EDLA Porting Notes
 
 **Author:** R.W. Harper  
-**Last Updated:** 2025-02-04  
+**Last Updated:** 2026-02-12  
 **License:** GPL-3.0
 
 This document summarizes two related C# projects and what EDLA has ported or may use:

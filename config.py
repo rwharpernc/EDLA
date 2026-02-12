@@ -14,7 +14,7 @@ from pathlib import Path
 
 # Application metadata
 APP_NAME = "EDLA"
-APP_VERSION = "Alpha 1.03"
+APP_VERSION = "Alpha 1.04"
 APP_AUTHOR = "R.W. Harper"
 APP_DESCRIPTION = "Elite Dangerous Log Analyzer"
 
